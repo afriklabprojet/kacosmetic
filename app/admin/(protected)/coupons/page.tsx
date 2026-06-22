@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { CouponType } from "@prisma/client"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -8,6 +9,8 @@ export const dynamic = "force-dynamic"
 
 async function toggleCoupon(id: string, isActive: boolean): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
   try {
     await prisma.coupon.update({
       where: { id },
@@ -23,6 +26,8 @@ async function toggleCoupon(id: string, isActive: boolean): Promise<void> {
 
 async function deleteCoupon(id: string): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
   try {
     await prisma.coupon.delete({ where: { id } })
     revalidatePath("/admin/coupons")
@@ -35,6 +40,8 @@ async function deleteCoupon(id: string): Promise<void> {
 
 async function createCoupon(formData: FormData): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
 
   const rawCode = formData.get("code")
   const rawType = formData.get("type")
