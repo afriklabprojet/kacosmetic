@@ -5,9 +5,18 @@ import { useSearchParams } from "next/navigation"
 import { useState, Suspense } from "react"
 import { Loader, Mail, Sparkles } from "lucide-react"
 
+/** Only allow relative paths as callbackUrl to prevent open redirect attacks. */
+function sanitizeCallbackUrl(raw: string | null, fallback: string): string {
+  if (!raw) return fallback
+  if (raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) {
+    return raw
+  }
+  return fallback
+}
+
 function SignInButtonsInner({ defaultCallbackUrl = "/" }: Readonly<{ defaultCallbackUrl?: string }>) {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("next") ?? defaultCallbackUrl
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get("next"), defaultCallbackUrl)
 
   return (
     <div className="space-y-5">
