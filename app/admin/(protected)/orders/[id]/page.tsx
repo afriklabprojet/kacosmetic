@@ -5,6 +5,7 @@ import { transitionOrder, canTransition } from "@/lib/order-state-machine"
 import { OrderStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { ArrowLeft, FileText } from "lucide-react"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -44,6 +45,9 @@ const TRANSITION_STYLES: Partial<Record<OrderStatus, string>> = {
 
 async function transitionAction(orderId: string, to: OrderStatus, _formData: FormData) {
   "use server"
+  // Server actions must always verify auth independently of layout guards
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
   try {
     await transitionOrder(orderId, to)
   } catch (err: unknown) {
