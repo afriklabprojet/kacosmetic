@@ -108,7 +108,8 @@ export default function Footer() {
                 alt="Ka Cosmetic"
                 width={110}
                 height={124}
-                className="mb-4 h-auto w-[110px]"
+                className="mb-4"
+                style={{ width: "110px", height: "auto" }}
               />
             </Link>
 
