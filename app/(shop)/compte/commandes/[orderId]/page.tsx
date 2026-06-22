@@ -54,7 +54,8 @@ export default async function OrderTrackingPage({ params }: Props) {
   if (!session?.user) redirect(`/connexion?next=/compte/commandes/${orderId}`)
 
   const order = await getOrderById(orderId)
-  if (!order) notFound()
+  // IDOR guard: ensure the order belongs to the authenticated user
+  if (!order || order.userId !== session.user.id) notFound()
 
   const currentStepIndex = STATUS_ORDER[order.status] ?? 0
   const isCancelled = order.status === "CANCELLED"
