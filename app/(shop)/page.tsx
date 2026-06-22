@@ -149,20 +149,22 @@ const RITUEL_FALLBACK = {
   url: "/videos/aaa.mp4",
 }
 
+async function getRituelConfig(): Promise<{ mediaType: "image" | "video"; url: string }> {
+  try {
+    const row = await prisma.siteSetting.findUnique({ where: { key: "rituel_section" } })
+    if (!row) return RITUEL_FALLBACK
+    const parsed = JSON.parse(row.value) as { mediaType: "image" | "video"; url: string }
+    if (!parsed.mediaType || !parsed.url) return RITUEL_FALLBACK
+    return parsed
+  } catch {
+    return RITUEL_FALLBACK
+  }
+}
+
 const getRituelConfigCached = unstable_cache(
-  async (): Promise<{ mediaType: "image" | "video"; url: string }> => {
-    try {
-      const row = await prisma.siteSetting.findUnique({ where: { key: "rituel_section" } })
-      if (!row) return RITUEL_FALLBACK
-      const parsed = JSON.parse(row.value) as { mediaType: "image" | "video"; url: string }
-      if (!parsed.mediaType || !parsed.url) return RITUEL_FALLBACK
-      return parsed
-    } catch {
-      return RITUEL_FALLBACK
-    }
-  },
+  getRituelConfig,
   ["home-rituel-config"],
-  { revalidate: 86400, tags: ["site-settings"] }
+  { revalidate: 3600, tags: ["site-settings"] }
 )
 
 export default async function HomePage() {
