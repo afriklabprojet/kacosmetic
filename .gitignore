@@ -48,3 +48,4 @@ public/logo-backup.png
 .qodo/
 *.jpeg
 *.jpg.tmp
+.superpowers/
