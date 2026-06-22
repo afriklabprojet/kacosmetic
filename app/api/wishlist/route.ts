@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { applyRateLimitAsync, LIMITS } from "@/lib/rate-limit"
 
 const toggleSchema = z.object({
   productId: z.string().cuid(),
@@ -25,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = await applyRateLimitAsync(req, "cart", LIMITS.cart)
+  if (rl) return rl
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Connexion requise" }, { status: 401 })
