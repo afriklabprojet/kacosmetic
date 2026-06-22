@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/release-stock",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/recalculate-popularity",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

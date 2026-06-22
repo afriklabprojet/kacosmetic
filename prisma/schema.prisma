@@ -1,0 +1,420 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth (NextAuth v5) ──────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  phone         String?
+  passwordHash  String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts  Account[]
+  sessions  Session[]
+  addresses Address[]
+  orders    Order[]
+  cart      CartItem[]
+  wishlist  WishlistItem[]
+  couponUsages CouponUsage[]
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+// ─── Catalogue ───────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String   @db.Text
+  ingredients    String?  @db.Text
+  howToUse       String?  @db.Text
+  categoryId     String
+  brandName      String   @default("Ka Cosmetic")
+  isActive       Boolean  @default(true)
+  isFeatured     Boolean  @default(false)
+  minPrice       Int      @default(0)
+  maxPrice       Int      @default(0)
+  popularityScore Int     @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category   Category         @relation(fields: [categoryId], references: [id])
+  variants   ProductVariant[]
+  images     ProductImage[]
+  orderItems OrderItem[]
+  wishlist   WishlistItem[]
+
+  @@index([categoryId, isActive])
+  @@index([isActive, isFeatured, createdAt(sort: Desc)])
+  @@index([isActive, minPrice])
+  @@index([isActive, maxPrice])
+  @@index([isActive, popularityScore])
+  @@index([isActive, createdAt(sort: Desc)])
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  name          String
+  sku           String   @unique
+  price         Int      // en FCFA (entier)
+  comparePrice  Int?     // prix barré
+  stock         Int      @default(0)
+  reservedStock Int      @default(0)
+  weight        Int?     // grammes
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  reservations StockReservation[]
+
+  @@index([productId, isActive, price])
+  @@index([productId, isActive, stock])
+}
+
+model ProductImage {
+  id         String  @id @default(cuid())
+  productId  String
+  url        String
+  blurHash   String?
+  alt        String?
+  sortOrder  Int     @default(0)
+  isPrimary  Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isPrimary])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+// ─── Panier ──────────────────────────────────────────────────
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  variantId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, variantId])
+}
+
+// ─── Adresses ────────────────────────────────────────────────
+
+model Address {
+  id           String  @id @default(cuid())
+  userId       String
+  label        String? // "Maison", "Bureau"...
+  firstName    String
+  lastName     String
+  phone        String
+  street       String
+  neighborhood String
+  commune      String
+  city         String  @default("Abidjan")
+  instructions String?
+  isDefault    Boolean @default(false)
+  zoneId       String?
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone         DeliveryZone?  @relation(fields: [zoneId], references: [id])
+  orders       Order[]
+}
+
+// ─── Livraison ───────────────────────────────────────────────
+
+model DeliveryZone {
+  id          String  @id @default(cuid())
+  name        String
+  communes    String[] // liste des communes couvertes
+  priceJ0     Int     // livraison J0 en FCFA
+  priceJ1     Int     // livraison J+1 en FCFA
+  minOrderJ0  Int?    // montant minimum pour J0
+  isActive    Boolean @default(true)
+
+  addresses Address[]
+  orders    Order[]
+}
+
+// ─── Commandes ───────────────────────────────────────────────
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique // KA-2026-0001
+  userId          String?       // null = commande invité
+  addressId       String?       // null = adresse inline ci-dessous
+  zoneId          String?
+  status          OrderStatus   @default(PENDING)
+  deliveryType    DeliveryType  @default(J1)
+  subtotal        Int           // FCFA
+  deliveryFee     Int           @default(0)
+  discount        Int           @default(0)
+  total           Int
+  couponCode      String?
+  notes           String?
+  // Champs livraison inline (guest ou snapshot)
+  guestFirstName  String?
+  guestLastName   String?
+  guestEmail      String?
+  guestPhone      String?
+  deliveryAddress String?
+  deliveryCommune String?
+  reservedUntil   DateTime?     // TTL anti-oversell
+  confirmedAt     DateTime?
+  preparedAt      DateTime?
+  inDeliveryAt    DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user       User?         @relation(fields: [userId], references: [id])
+  address    Address?      @relation(fields: [addressId], references: [id])
+  zone       DeliveryZone? @relation(fields: [zoneId], references: [id])
+  items      OrderItem[]
+  payments   Payment[]
+  invoice    Invoice?
+  statusHistory OrderStatusHistory[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String
+  // Snapshots figés au moment de la commande
+  productName String
+  variantName String
+  sku         String
+  unitPrice   Int    // FCFA
+  quantity    Int
+  total       Int    // unitPrice × quantity
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@index([productId])
+  @@index([orderId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  IN_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryType {
+  J0
+  J1
+}
+
+// ─── Réservation stock ───────────────────────────────────────
+
+model StockReservation {
+  id        String   @id @default(cuid())
+  variantId String
+  orderId   String
+  quantity  Int
+  expiresAt DateTime
+  released  Boolean  @default(false)
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([expiresAt, released])
+}
+
+// ─── Paiement ────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String
+  provider        String        @default("jeko-africa")
+  transactionId   String?       @unique // ID retourné par Jeko
+  method          PaymentMethod
+  amount          Int           // FCFA
+  status          PaymentStatus @default(PENDING)
+  webhookPayload  Json?         // payload brut webhook
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+}
+
+enum PaymentMethod {
+  ORANGE_MONEY
+  MTN_MONEY
+  WAVE
+  MOOV_MONEY
+  DJAMO
+  VISA
+  MASTERCARD
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+// ─── Coupons ─────────────────────────────────────────────────
+
+model Coupon {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  type           CouponType   @default(PERCENTAGE)
+  value          Int          // % ou FCFA
+  minOrderAmount Int?
+  maxUses        Int?
+  usedCount      Int          @default(0)
+  singleUsePerCustomer Boolean @default(true)
+  isActive       Boolean      @default(true)
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+
+  usages CouponUsage[]
+}
+
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  orderId   String
+  usedAt    DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([couponId, userId])
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
+// ─── Paramètres du site ──────────────────────────────────────
+
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Factures ────────────────────────────────────────────────
+
+model Invoice {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  invoiceNumber String   @unique // KA-2026-0001
+  pdfUrl        String   // Cloudinary URL
+  issuedAt      DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
