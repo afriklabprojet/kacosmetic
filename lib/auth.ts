@@ -7,7 +7,6 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import type { Role } from "@prisma/client"
 
-// Étendre le type Session pour inclure id et role
 declare module "next-auth" {
   interface Session {
     user: DefaultSession["user"] & {
@@ -16,6 +15,7 @@ declare module "next-auth" {
     }
   }
 }
+
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -50,17 +50,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
         if (!valid) return null
 
-        return { id: user.id, email: user.email, name: user.name, image: user.image }
+        return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role }
       },
     }),
   ],
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token["id"] = user.id as string
+        token["role"] = (user as unknown as { role: Role }).role
+      }
+      // Charger le rôle depuis la DB pour les providers OAuth (Google/Resend)
+      if (!token["role"] && token.sub) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { role: true },
+        })
+        token["role"] = (dbUser?.role ?? "CUSTOMER") as Role
+      }
+      return token
+    },
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id
-        // user vient de la DB via PrismaAdapter, il contient le champ role
-        session.user.role = (user as unknown as { role: Role }).role
+        session.user.id = token["id"] as string
+        session.user.role = token["role"] as Role
       }
       return session
     },
