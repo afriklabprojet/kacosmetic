@@ -1,6 +1,7 @@
 import { Fragment } from "react"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -20,6 +21,8 @@ interface DeliveryZoneRow {
 
 async function toggleZoneActive(id: string, isActive: boolean): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
   try {
     await prisma.deliveryZone.update({
       where: { id },
@@ -35,6 +38,8 @@ async function toggleZoneActive(id: string, isActive: boolean): Promise<void> {
 
 async function updateZone(formData: FormData): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
 
   const id = formData.get("id")
   const rawPriceJ0 = formData.get("priceJ0")
@@ -87,6 +92,8 @@ async function updateZone(formData: FormData): Promise<void> {
 
 async function createZone(formData: FormData): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
 
   const rawName = formData.get("name")
   const rawCommunes = formData.get("communes")
