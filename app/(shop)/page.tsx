@@ -145,8 +145,8 @@ const getPromoProductsCached = unstable_cache(
 )
 
 const RITUEL_FALLBACK = {
-  mediaType: "image" as const,
-  url: "https://images.unsplash.com/photo-1601049541271-6c6a40c6cb95?q=80&w=1600&auto=format&fit=crop",
+  mediaType: "video" as const,
+  url: "/videos/aaa.mp4",
 }
 
 const getRituelConfigCached = unstable_cache(
