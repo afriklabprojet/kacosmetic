@@ -198,6 +198,8 @@ export async function createOrder(input: CreateOrderInput) {
   return { orderId: order.id, paymentUrl: jekoPayment.redirectUrl }
 }
 
+const USER_ORDERS_LIMIT = 100
+
 export async function getUserOrders(userId: string) {
   return prisma.order.findMany({
     where: { userId },
@@ -210,6 +212,7 @@ export async function getUserOrders(userId: string) {
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
     },
     orderBy: { createdAt: "desc" },
+    take: USER_ORDERS_LIMIT,
   })
 }
 
