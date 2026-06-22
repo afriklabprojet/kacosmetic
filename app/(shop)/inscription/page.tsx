@@ -115,7 +115,8 @@ export default function InscriptionPage() {
                 width={72}
                 height={80}
                 priority
-                className="mx-auto mb-5 h-auto w-[72px]"
+                className="mx-auto mb-5"
+                style={{ width: "72px", height: "auto" }}
               />
             </Link>
             <h1 className="font-display text-3xl font-light text-ebene">
