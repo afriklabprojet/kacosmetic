@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
@@ -35,6 +35,14 @@ interface AddressData extends FormState {
 }
 
 export default function NouvelleAdressePage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-2xl px-4 py-20 text-center text-taupe">Chargement…</div>}>
+      <NouvelleAdresseForm />
+    </Suspense>
+  )
+}
+
+function NouvelleAdresseForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get("edit")
