@@ -54,7 +54,7 @@ export default function HeroVideo({ videoSrc, posterSrc, alt }: HeroVideoProps) 
         alt={alt}
         fill
         priority
-        sizes="100vw"
+        sizes="(max-width: 767px) 100vw, 1px"
         className="object-cover object-center opacity-90 md:hidden"
         style={{ filter: "contrast(1.05) brightness(0.82)" }}
       />
