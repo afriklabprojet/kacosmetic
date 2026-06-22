@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath, revalidateTag } from "next/cache"
 import Link from "next/link"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -13,6 +14,8 @@ async function toggleProductActive(
   currentValue: boolean
 ): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
   try {
     const product = await prisma.product.update({
       where: { id: productId },
