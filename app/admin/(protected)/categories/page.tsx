@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -35,6 +36,8 @@ interface CategoryRow {
 
 async function createCategory(formData: FormData): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
 
   const rawName = formData.get("name")
   const rawSlug = formData.get("slug")
@@ -83,6 +86,8 @@ async function createCategory(formData: FormData): Promise<void> {
 
 async function toggleCategoryActive(id: string, currentValue: boolean): Promise<void> {
   "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
 
   try {
     await prisma.category.update({
