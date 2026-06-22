@@ -49,3 +49,7 @@ public/logo-backup.png
 *.jpeg
 *.jpg.tmp
 .superpowers/
+
+# documentation
+*.md
+docs/
