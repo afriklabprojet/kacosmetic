@@ -149,7 +149,7 @@ const getBestSellersCached = unstable_cache(
           where: { isActive: true },
           orderBy: { price: "asc" },
           take: 1,
-          select: { price: true, comparePrice: true, stock: true, reservedStock: true },
+          select: { id: true, price: true, comparePrice: true, stock: true, reservedStock: true },
         },
       },
       orderBy: [{ popularityScore: "desc" }, { isFeatured: "desc" }],
@@ -504,6 +504,7 @@ export default async function HomePage() {
                     blurDataUrl={image?.blurHash}
                     isFeatured={product.isFeatured}
                     inStock={(variant?.stock ?? 0) - (variant?.reservedStock ?? 0) > 0}
+                    variantId={variant?.id}
                   />
                 )
               })}
