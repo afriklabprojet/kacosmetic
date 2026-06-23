@@ -501,6 +501,7 @@ export default async function HomePage() {
                     comparePrice={variant?.comparePrice}
                     imageUrl={image?.url ?? "/placeholder-product.jpg"}
                     blurDataUrl={image?.blurHash}
+                    isFeatured={product.isFeatured}
                     inStock={(variant?.stock ?? 0) - (variant?.reservedStock ?? 0) > 0}
                   />
                 )
