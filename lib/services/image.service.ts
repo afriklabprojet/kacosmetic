@@ -67,6 +67,31 @@ export async function uploadRituelMedia(
   return { url: result.secure_url, mediaType: isVideo ? "video" : "image" }
 }
 
+export async function uploadCategoryImage(
+  file: Buffer,
+  categorySlug: string
+): Promise<{ url: string }> {
+  const result = await new Promise<{ secure_url: string }>(
+    (resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: `kacosmetic/categories`,
+            public_id: categorySlug,
+            overwrite: true,
+            transformation: [{ quality: "auto:best", fetch_format: "webp", width: 800, height: 800, crop: "fill", gravity: "auto" }],
+          },
+          (err, res) => {
+            if (err || !res) return reject(err)
+            resolve(res as { secure_url: string })
+          }
+        )
+        .end(file)
+    }
+  )
+  return { url: result.secure_url }
+}
+
 export function getOptimizedUrl(
   publicId: string,
   options: { width?: number; height?: number; crop?: string } = {}
