@@ -103,7 +103,7 @@ export default function ConnexionPage() {
               conditions générales
             </Link>
             {" "}et notre{" "}
-            <Link href="/cgv" className="text-brun underline-offset-2 hover:underline">
+            <Link href="/confidentialite" className="text-brun underline-offset-2 hover:underline">
               politique de confidentialité
             </Link>.
           </p>
