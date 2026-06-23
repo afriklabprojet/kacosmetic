@@ -99,6 +99,7 @@ export default async function CataloguePage({ searchParams }: Props) {
                       blurDataUrl={image?.blurHash}
                       isFeatured={product.isFeatured}
                       inStock={(variant?.stock ?? 0) - (variant?.reservedStock ?? 0) > 0}
+                      variantId={variant?.id}
                     />
                   )
                 })}
