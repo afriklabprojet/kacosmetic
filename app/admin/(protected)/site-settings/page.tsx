@@ -426,9 +426,9 @@ export default function SiteSettingsPage() {
       <SectionCard title="Réseaux sociaux" subtitle="Liens affichés dans le footer">
         <div className="space-y-3">
           {parseSocials().map((item, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input className={inputCls("w-28")} placeholder="Label (Instagram)" value={item.label} onChange={e => updateSocial(i, "label", e.target.value)} />
-              <input className={inputCls("flex-1")} placeholder="URL complète" value={item.href} onChange={e => updateSocial(i, "href", e.target.value)} />
+            <div key={i} className="flex min-w-0 items-center gap-2">
+              <input className={inputCls("w-28 shrink-0")} placeholder="Label (Instagram)" value={item.label} onChange={e => updateSocial(i, "label", e.target.value)} />
+              <input className={inputCls("min-w-0 flex-1")} placeholder="URL complète" value={item.href} onChange={e => updateSocial(i, "href", e.target.value)} />
               <button type="button" onClick={() => removeSocial(i)} className="text-xs text-red-400 hover:text-red-600 shrink-0">✕</button>
             </div>
           ))}
