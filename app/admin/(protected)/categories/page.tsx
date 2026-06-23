@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic"
 const SLUG_MAX_LENGTH = 100
 const NAME_MAX_LENGTH = 100
 const DESCRIPTION_MAX_LENGTH = 500
+const IMAGE_URL_MAX_LENGTH = 500
 const SLUG_REGEX = /^[a-z0-9-]+$/
 
 function slugify(value: string): string {
@@ -27,6 +28,7 @@ interface CategoryRow {
   id: string
   name: string
   slug: string
+  imageUrl: string | null
   sortOrder: number
   isActive: boolean
   _count: { products: number }
@@ -42,6 +44,7 @@ async function createCategory(formData: FormData): Promise<void> {
   const rawName = formData.get("name")
   const rawSlug = formData.get("slug")
   const rawDescription = formData.get("description")
+  const rawImageUrl = formData.get("imageUrl")
   const rawSortOrder = formData.get("sortOrder")
 
   if (typeof rawName !== "string" || rawName.trim().length === 0) {
@@ -68,13 +71,18 @@ async function createCategory(formData: FormData): Promise<void> {
       ? rawDescription.trim().slice(0, DESCRIPTION_MAX_LENGTH)
       : undefined
 
+  const imageUrl =
+    typeof rawImageUrl === "string" && rawImageUrl.trim().length > 0
+      ? rawImageUrl.trim().slice(0, IMAGE_URL_MAX_LENGTH)
+      : undefined
+
   const sortOrderRaw =
     typeof rawSortOrder === "string" ? parseInt(rawSortOrder, 10) : NaN
   const sortOrder = !isNaN(sortOrderRaw) && sortOrderRaw >= 0 ? sortOrderRaw : 0
 
   try {
     await prisma.category.create({
-      data: { name, slug, description, sortOrder, isActive: true },
+      data: { name, slug, description, imageUrl, sortOrder, isActive: true },
     })
     revalidatePath("/admin/categories")
   } catch (error: unknown) {
@@ -193,7 +201,7 @@ export default async function AdminCategoriesPage() {
 
   try {
     categories = await prisma.category.findMany({
-      include: { _count: { select: { products: true } } },
+      select: { id: true, name: true, slug: true, imageUrl: true, sortOrder: true, isActive: true, _count: { select: { products: true } } },
       orderBy: { sortOrder: "asc" },
     })
   } catch (error: unknown) {
@@ -219,7 +227,7 @@ export default async function AdminCategoriesPage() {
         <table className="w-full text-sm">
           <thead className="border-b border-or-light bg-ivoire">
             <tr>
-              {["Nom", "Slug", "Produits", "Ordre", "Statut", "Activer/Désactiver", ""].map((h) => (
+              {["Nom", "Slug", "Image", "Produits", "Ordre", "Statut", "Activer/Désactiver", ""].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-taupe"
@@ -232,7 +240,7 @@ export default async function AdminCategoriesPage() {
           <tbody className="divide-y divide-[#E5D5C5]">
             {categories.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-taupe">
+                <td colSpan={8} className="px-4 py-10 text-center text-sm text-taupe">
                   Aucune catégorie pour l&apos;instant.
                 </td>
               </tr>
@@ -244,6 +252,12 @@ export default async function AdminCategoriesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-mono text-xs text-taupe">{cat.slug}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {cat.imageUrl
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={cat.imageUrl} alt={cat.name} className="h-8 w-12 rounded object-cover" />
+                      : <span className="text-xs text-taupe/50">—</span>}
                   </td>
                   <td className="px-4 py-3 text-sm text-ebene">
                     {cat._count.products}
@@ -344,22 +358,44 @@ export default async function AdminCategoriesPage() {
             />
           </div>
 
+          {/* Image URL */}
+          <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
+            <label
+              htmlFor="imageUrl"
+              className="text-xs font-medium uppercase tracking-wider text-taupe"
+            >
+              URL de l&apos;image{" "}
+              <span className="normal-case font-normal text-taupe/60">(menu navigation)</span>
+            </label>
+            <input
+              id="imageUrl"
+              name="imageUrl"
+              type="url"
+              maxLength={IMAGE_URL_MAX_LENGTH}
+              placeholder="https://images.unsplash.com/…"
+              className="rounded-md border border-or-light bg-ivoire px-3 py-2 text-sm text-ebene placeholder:text-taupe focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
+            />
+            <p className="text-[11px] text-taupe/60">Photo affichée dans le mega-menu de la navigation (format carré recommandé).</p>
+          </div>
+
           {/* Description */}
           <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
             <label
               htmlFor="description"
               className="text-xs font-medium uppercase tracking-wider text-taupe"
             >
-              Description
+              Sous-catégories{" "}
+              <span className="normal-case font-normal text-taupe/60">(séparées par |)</span>
             </label>
             <textarea
               id="description"
               name="description"
               rows={2}
               maxLength={DESCRIPTION_MAX_LENGTH}
-              placeholder="Description courte de la catégorie (optionnel)"
+              placeholder="Éclat | Hydratation | Anti-âge | Nettoyant"
               className="rounded-md border border-or-light bg-ivoire px-3 py-2 text-sm text-ebene placeholder:text-taupe focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40"
             />
+            <p className="text-[11px] text-taupe/60">Ces sous-catégories apparaissent comme liens dans le mega-menu. Séparer par <code className="rounded bg-or-light/60 px-1">|</code> — ex : <code className="rounded bg-or-light/60 px-1">Éclat | Hydratation | Anti-âge</code></p>
           </div>
 
           {/* Submit */}
