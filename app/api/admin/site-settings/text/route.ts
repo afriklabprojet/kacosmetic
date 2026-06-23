@@ -8,18 +8,21 @@ export const dynamic = "force-dynamic"
 
 // All editable text/JSON keys managed via this endpoint
 export const TEXT_SETTING_KEYS = [
-  "announcements",       // JSON: {text:string, highlight?:string}[]
-  "marquee_items",       // JSON: string[]
-  "social_links",        // JSON: {label:string, href:string, icon:string}[]
-  "testimonials",        // JSON: {id:number, name:string, location:string, rating:number, text:string, product:string, date:string, initials:string}[]
-  "engagements",         // JSON: {title:string, description:string, icon:string}[]
-  "hero_tagline",        // string
-  "hero_heading",        // string (supports \n for line breaks)
-  "hero_description",    // string
-  "rituel_title",        // string
-  "rituel_description",  // string
+  "announcements",          // JSON: {text:string, highlight?:string}[]
+  "marquee_items",          // JSON: string[]
+  "social_links",           // JSON: {label:string, href:string, icon:string}[]
+  "testimonials",           // JSON: {id:number, name:string, location:string, rating:number, text:string, product:string, date:string, initials:string}[]
+  "engagements",            // JSON: {title:string, description:string, icon:string}[]
+  "hero_tagline",           // string
+  "hero_heading",           // string (supports | for line breaks)
+  "hero_description",       // string
+  "rituel_title",           // string
+  "rituel_description",     // string
   "newsletter_description", // string
-  "brand_tagline",       // string (used in marquee eyebrow)
+  "brand_tagline",          // string (used in marquee eyebrow)
+  "legal_mentions",         // plain text — ## Title sections
+  "legal_confidentialite",  // plain text — ## Title sections
+  "legal_cgv",              // plain text — ## Title sections
 ] as const
 
 export type TextSettingKey = typeof TEXT_SETTING_KEYS[number]
