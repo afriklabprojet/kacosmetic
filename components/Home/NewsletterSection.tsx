@@ -1,13 +1,11 @@
-export default function NewsletterSection() {
+export default function NewsletterSection({ description }: Readonly<{ description: string }>) {
   return (
     <section className="fade-in-section relative overflow-hidden bg-creme border-y border-or/20">
-      {/* Ligne décorative animée en haut */}
       <div className="absolute top-0 left-0 right-0 h-[2px] newsletter-shimmer" aria-hidden="true" />
 
       <div className="mx-auto max-w-[1400px] px-4 md:px-8">
         <div className="flex flex-col items-center gap-6 py-10 md:flex-row md:items-center md:gap-12 md:py-8">
 
-          {/* Gauche — identité */}
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-6">
             <span
               className="select-none text-2xl text-or newsletter-pulse"
@@ -26,12 +24,10 @@ export default function NewsletterSection() {
             </div>
           </div>
 
-          {/* Milieu — texte (desktop uniquement) */}
           <p className="hidden flex-1 text-sm font-light text-taupe md:block md:border-l md:border-or/20 md:pl-8">
-            Rituels inédits, offres privées et avant-premières réservées aux membres.
+            {description}
           </p>
 
-          {/* Droite — formulaire */}
           <form
             action="/api/newsletter"
             method="POST"
@@ -60,7 +56,6 @@ export default function NewsletterSection() {
         </div>
       </div>
 
-      {/* Ligne décorative en bas */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] newsletter-shimmer" style={{ animationDelay: "1.4s" }} aria-hidden="true" />
     </section>
   )
