@@ -23,6 +23,9 @@ interface TextSettings {
   rituel_description?: string
   newsletter_description?: string
   brand_tagline?: string
+  legal_mentions?: string
+  legal_confidentialite?: string
+  legal_cgv?: string
 }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
@@ -212,6 +215,7 @@ const NAV_SECTIONS = [
   { id: "sociaux",        label: "Réseaux" },
   { id: "newsletter",     label: "Newsletter" },
   { id: "rituel-media",   label: "Média" },
+  { id: "legal",          label: "Pages légales" },
 ]
 
 function SectionNav() {
@@ -249,6 +253,9 @@ export default function SiteSettingsPage() {
   const [rituelTitle, setRituelTitle] = useState("")
   const [rituelDesc, setRituelDesc] = useState("")
   const [newsletterDesc, setNewsletterDesc] = useState("")
+  const [legalMentions, setLegalMentions] = useState("")
+  const [legalConfidentialite, setLegalConfidentialite] = useState("")
+  const [legalCgv, setLegalCgv] = useState("")
 
   useEffect(() => {
     fetch("/api/admin/site-settings/text")
@@ -270,6 +277,9 @@ export default function SiteSettingsPage() {
     setRituelTitle(settings.rituel_title ?? "")
     setRituelDesc(settings.rituel_description ?? "")
     setNewsletterDesc(settings.newsletter_description ?? "")
+    setLegalMentions(settings.legal_mentions ?? "")
+    setLegalConfidentialite(settings.legal_confidentialite ?? "")
+    setLegalCgv(settings.legal_cgv ?? "")
   }, [loaded, settings])
 
   // ── JSON helpers ──────────────────────────────────────────────────────────
@@ -530,6 +540,50 @@ export default function SiteSettingsPage() {
 
       {/* ── 9. Rituel — Média ───────────────────────────────── */}
       <RituelMediaSection />
+
+      {/* ── 10. Pages légales ───────────────────────────────── */}
+      <Section id="legal" title="Pages légales" subtitle="Mentions légales, Confidentialité, CGV">
+        <div className="space-y-6">
+          <Hint>
+            Format : <code className="rounded bg-[#E5D5C5] px-1">## Titre de section</code> puis le texte en dessous.
+            Séparez les sections par une ligne vide. Utilisez <code className="rounded bg-[#E5D5C5] px-1">**texte**</code> pour le gras.
+            Si le champ est vide, le contenu par défaut est affiché.
+          </Hint>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs font-semibold text-[#6B5744]">Mentions légales</label>
+              <a href="/mentions-legales" target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#C9A84C] hover:underline">Voir la page ↗</a>
+            </div>
+            <textarea className={inputCls("font-mono text-xs")} rows={12} value={legalMentions} onChange={e => setLegalMentions(e.target.value)} placeholder={"## Éditeur du site\n**Dénomination** : Ka Cosmetic\n..."} />
+            <div className="mt-2">
+              <SaveBtn status={status("legal-mentions")} onClick={() => save("legal-mentions", { legal_mentions: legalMentions })} />
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs font-semibold text-[#6B5744]">Politique de confidentialité</label>
+              <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#C9A84C] hover:underline">Voir la page ↗</a>
+            </div>
+            <textarea className={inputCls("font-mono text-xs")} rows={12} value={legalConfidentialite} onChange={e => setLegalConfidentialite(e.target.value)} placeholder={"## 1. Responsable du traitement\n..."} />
+            <div className="mt-2">
+              <SaveBtn status={status("legal-confidentialite")} onClick={() => save("legal-confidentialite", { legal_confidentialite: legalConfidentialite })} />
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-xs font-semibold text-[#6B5744]">Conditions Générales de Vente (CGV)</label>
+              <a href="/cgv" target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#C9A84C] hover:underline">Voir la page ↗</a>
+            </div>
+            <textarea className={inputCls("font-mono text-xs")} rows={12} value={legalCgv} onChange={e => setLegalCgv(e.target.value)} placeholder={"## Article 1 — Objet\n..."} />
+            <div className="mt-2">
+              <SaveBtn status={status("legal-cgv")} onClick={() => save("legal-cgv", { legal_cgv: legalCgv })} />
+            </div>
+          </div>
+        </div>
+      </Section>
 
     </div>
   )
