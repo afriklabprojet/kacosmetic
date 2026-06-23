@@ -2,7 +2,7 @@ const ITEMS = [
   "La Fée de la Perfection",
   "Skincare Visage",
   "Rituels Corps & Bain",
-  "Maquillage Signature",
+  "Coffrets Exclusifs",
   "Coffrets Exclusifs",
 ]
 
