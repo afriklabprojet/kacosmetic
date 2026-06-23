@@ -1,30 +1,96 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { unstable_cache } from "next/cache"
+import { prisma } from "@/lib/prisma"
+
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: "Mentions légales — Ka Cosmetic",
   description: "Mentions légales du site kacosmetic.ci.",
 }
 
-function Section({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
+const DEFAULT_CONTENT = `## Éditeur du site
+**Dénomination** : Ka Cosmetic
+**Forme juridique** : Entreprise individuelle
+**Siège social** : Abidjan, Côte d'Ivoire
+**Email** : contact@kacosmetic.ci
+**Site web** : kacosmetic.ci
+
+## Directeur de la publication
+Le directeur de la publication est le représentant légal de Ka Cosmetic.
+
+## Hébergement
+**Hébergeur** : Vercel Inc.
+**Adresse** : 340 Pine Street, Suite 900, San Francisco, CA 94104, États-Unis
+**Site** : vercel.com
+
+## Base de données
+**Prestataire** : Neon (PostgreSQL)
+**Site** : neon.tech
+
+## Propriété intellectuelle
+L'ensemble des éléments constituant le site kacosmetic.ci (textes, images, visuels, logo, marque) sont la propriété exclusive de Ka Cosmetic et sont protégés par le droit de la propriété intellectuelle.
+
+Toute reproduction, représentation, modification ou exploitation, totale ou partielle, de ces éléments sans autorisation écrite préalable est strictement interdite.
+
+## Responsabilité
+Ka Cosmetic s'efforce d'assurer l'exactitude des informations publiées sur le site mais ne peut garantir leur exhaustivité ni leur mise à jour permanente.
+
+## Liens hypertextes
+Le site peut contenir des liens vers des sites tiers. Ka Cosmetic n'exerce aucun contrôle sur ces sites et n'en est pas responsable.
+
+## Données personnelles
+Pour en savoir plus sur le traitement de vos données personnelles, consultez notre politique de confidentialité.
+
+## Droit applicable
+Le présent site et ses mentions légales sont soumis au droit ivoirien. Tout litige relatif à l'utilisation du site relève de la compétence des tribunaux d'Abidjan.`
+
+const getContent = unstable_cache(
+  async () => {
+    const row = await prisma.siteSetting.findUnique({ where: { key: "legal_mentions" } })
+    return row?.value ?? DEFAULT_CONTENT
+  },
+  ["legal_mentions"],
+  { revalidate: 3600, tags: ["site-settings"] }
+)
+
+function InlineText({ text }: Readonly<{ text: string }>) {
+  const parts = text.split(/\*\*(.+?)\*\*/g)
   return (
-    <section className="mb-8">
-      <h2 className="font-display mb-3 text-lg font-semibold text-ebene">{title}</h2>
-      <div className="space-y-2 text-sm leading-relaxed text-taupe">{children}</div>
-    </section>
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? <strong key={i} className="text-ebene">{part}</strong> : part
+      )}
+    </>
   )
 }
 
-function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
-  return (
-    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-      <span className="min-w-[160px] font-medium text-ebene">{label}</span>
-      <span>{value}</span>
-    </div>
-  )
+function renderContent(content: string) {
+  const sections = content.split(/^## /m).filter(Boolean)
+  return sections.map((section) => {
+    const newlineIdx = section.indexOf("\n")
+    const title = newlineIdx === -1 ? section.trim() : section.slice(0, newlineIdx).trim()
+    const body = newlineIdx === -1 ? "" : section.slice(newlineIdx + 1).trim()
+    const paragraphs = body.split(/\n\n+/)
+    return (
+      <section key={title} className="mb-8">
+        <h2 className="font-display mb-3 text-lg font-semibold text-ebene">{title}</h2>
+        <div className="space-y-2 text-sm leading-relaxed text-taupe">
+          {paragraphs.map((para, i) => (
+            <p key={i}>
+              <InlineText text={para.replace(/\n/g, " ")} />
+            </p>
+          ))}
+        </div>
+      </section>
+    )
+  })
 }
 
-export default function MentionsLegalesPage() {
+export default async function MentionsLegalesPage() {
+  const content = await getContent()
+
   return (
     <div className="bg-ivoire">
       <div className="border-b border-or/20 bg-creme px-4 py-16 pt-28 md:px-8">
@@ -41,83 +107,9 @@ export default function MentionsLegalesPage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
-
-        <Section title="Éditeur du site">
-          <div className="space-y-2">
-            <Row label="Dénomination" value="Ka Cosmetic" />
-            <Row label="Forme juridique" value="Entreprise individuelle" />
-            <Row label="Siège social" value="Abidjan, Côte d'Ivoire" />
-            <Row label="Email" value={<a href="mailto:contact@kacosmetic.ci" className="text-or hover:underline">contact@kacosmetic.ci</a>} />
-            <Row label="Site web" value={<a href="https://kacosmetic.ci" className="text-or hover:underline">kacosmetic.ci</a>} />
-          </div>
-        </Section>
-
-        <Section title="Directeur de la publication">
-          <p>Le directeur de la publication est le représentant légal de Ka Cosmetic.</p>
-        </Section>
-
-        <Section title="Hébergement">
-          <div className="space-y-2">
-            <Row label="Hébergeur" value="Vercel Inc." />
-            <Row label="Adresse" value="340 Pine Street, Suite 900, San Francisco, CA 94104, États-Unis" />
-            <Row label="Site" value={<a href="https://vercel.com" className="text-or hover:underline" target="_blank" rel="noopener noreferrer">vercel.com</a>} />
-          </div>
-        </Section>
-
-        <Section title="Base de données">
-          <div className="space-y-2">
-            <Row label="Prestataire" value="Neon (PostgreSQL)" />
-            <Row label="Site" value={<a href="https://neon.tech" className="text-or hover:underline" target="_blank" rel="noopener noreferrer">neon.tech</a>} />
-          </div>
-        </Section>
-
-        <Section title="Propriété intellectuelle">
-          <p>
-            L'ensemble des éléments constituant le site kacosmetic.ci (textes, images, visuels, logo, marque)
-            sont la propriété exclusive de Ka Cosmetic et sont protégés par le droit de la propriété intellectuelle.
-          </p>
-          <p>
-            Toute reproduction, représentation, modification ou exploitation, totale ou partielle, de ces
-            éléments sans autorisation écrite préalable est strictement interdite.
-          </p>
-        </Section>
-
-        <Section title="Responsabilité">
-          <p>
-            Ka Cosmetic s'efforce d'assurer l'exactitude des informations publiées sur le site mais ne peut
-            garantir leur exhaustivité ni leur mise à jour permanente. Ka Cosmetic ne saurait être tenu
-            responsable des dommages directs ou indirects résultant de l'utilisation du site.
-          </p>
-        </Section>
-
-        <Section title="Liens hypertextes">
-          <p>
-            Le site peut contenir des liens vers des sites tiers. Ka Cosmetic n'exerce aucun contrôle sur
-            ces sites et n'en est pas responsable.
-          </p>
-        </Section>
-
-        <Section title="Données personnelles">
-          <p>
-            Pour en savoir plus sur le traitement de vos données personnelles, consultez notre{" "}
-            <Link href="/confidentialite" className="text-or hover:underline">politique de confidentialité</Link>.
-          </p>
-        </Section>
-
-        <Section title="Droit applicable">
-          <p>
-            Le présent site et ses mentions légales sont soumis au droit ivoirien. Tout litige relatif
-            à l'utilisation du site relève de la compétence des tribunaux d'Abidjan.
-          </p>
-        </Section>
-
+        {renderContent(content)}
         <div className="mt-8 border-t border-or/20 pt-6 text-sm text-taupe">
-          <p>
-            Contact :{" "}
-            <a href="mailto:contact@kacosmetic.ci" className="text-or hover:underline">
-              contact@kacosmetic.ci
-            </a>
-          </p>
+          <p>Contact : <a href="mailto:contact@kacosmetic.ci" className="text-or hover:underline">contact@kacosmetic.ci</a></p>
         </div>
       </div>
     </div>
