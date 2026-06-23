@@ -1,15 +1,31 @@
-const ITEMS = [
+import { prisma } from "@/lib/prisma"
+import { unstable_cache } from "next/cache"
+
+const DEFAULT_ITEMS = [
   "La Fée de la Perfection",
   "Skincare Visage",
   "Rituels Corps & Bain",
-  "Coffrets Exclusifs",
   "Coffrets Exclusifs",
 ]
 
 const SEPARATOR = " ✦ "
 
-export default function MarqueeDivider() {
-  const text = ITEMS.join(SEPARATOR) + SEPARATOR
+const getMarqueeItems = unstable_cache(
+  async (): Promise<string[]> => {
+    const row = await prisma.siteSetting.findUnique({ where: { key: "marquee_items" } })
+    if (!row) return DEFAULT_ITEMS
+    try {
+      const parsed = JSON.parse(row.value) as string[]
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ITEMS
+    } catch { return DEFAULT_ITEMS }
+  },
+  ["marquee-items"],
+  { revalidate: 60, tags: ["site-settings"] }
+)
+
+export default async function MarqueeDivider() {
+  const items = await getMarqueeItems()
+  const text = items.join(SEPARATOR) + SEPARATOR
 
   return (
     <div className="w-full overflow-hidden border-y border-ebene bg-or py-3" aria-hidden="true">
