@@ -10,6 +10,7 @@ import HeroVideo from "@/components/Home/HeroVideo"
 import TestimonialsSection from "@/components/Home/TestimonialsSection"
 import NewsletterSection from "@/components/Home/NewsletterSection"
 import PromoSection from "@/components/Home/PromoSection"
+import RituelSection from "@/components/Home/RituelSection"
 
 export const revalidate = 3600
 
@@ -512,52 +513,13 @@ export default async function HomePage() {
       )}
 
       {/* ── Brand story split screen ──────────────────────────── */}
-      <section className="fade-in-section overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[60vh]">
-          <div className="relative h-[50vh] md:h-auto order-2 md:order-1">
-            {rituelConfig.mediaType === "video" ? (
-              <video
-                src={rituelConfig.url}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <Image
-                src={rituelConfig.url}
-                alt="Ingrédients botaniques Ka Cosmetic"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            )}
-          </div>
-          <div className="bg-ivoire flex flex-col justify-center items-start px-8 py-16 md:px-16 lg:px-24 order-1 md:order-2">
-            <span className="text-3xl text-or mb-6" aria-hidden="true">✦</span>
-            <h2 className="font-display text-3xl text-ebene mb-5 md:text-5xl">
-              {rituelLine1}
-              {rituelLine2 && (
-                <>
-                  {" "}
-                  <em className="text-brun not-italic">{rituelLine2}</em>
-                </>
-              )}
-            </h2>
-            <p className="text-sm leading-loose text-taupe max-w-md mb-8 md:text-base">
-              {rituelDesc}
-            </p>
-            <Link
-              href="/a-propos"
-              className="group flex items-center gap-3 text-sm uppercase tracking-widest text-brun transition-colors hover:text-brun-dark"
-            >
-              Notre Histoire
-              <span className="block h-px w-8 bg-brun transition-all duration-300 group-hover:w-12 group-hover:bg-brun-dark" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <RituelSection
+        mediaType={rituelConfig.mediaType}
+        mediaUrl={rituelConfig.url}
+        titleLine1={rituelLine1}
+        titleLine2={rituelLine2}
+        description={rituelDesc}
+      />
 
       {/* ── Promotions ───────────────────────────────────────── */}
       <PromoSection
