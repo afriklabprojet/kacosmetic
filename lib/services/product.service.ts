@@ -141,6 +141,7 @@ async function getRelatedProducts(categoryId: string, excludeSlug: string, limit
       id: true,
       slug: true,
       name: true,
+      isFeatured: true,
       category: { select: { name: true } },
       images: {
         where: { isPrimary: true },
