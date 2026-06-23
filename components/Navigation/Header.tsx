@@ -39,26 +39,13 @@ const NAV_ITEMS = [
     featured: { label: "Nouveauté", name: "Élixir Bronze Sublime", price: "75 000 FCFA" },
   },
   {
-    label: "Maquillage",
-    href: "/catalogue/maquillage",
-    image: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?q=80&w=800&auto=format&fit=crop",
-    subcategories: [
-      "Teint & Fond de teint",
-      "Lèvres",
-      "Yeux & Sourcils",
-      "Blush & Contouring",
-      "Fixateurs & Primers",
-    ],
-    featured: { label: "Exclusif", name: "Velours Intense — Rouge Terre", price: "38 000 FCFA" },
-  },
-  {
     label: "Coffrets",
     href: "/catalogue/coffrets",
     image: "https://images.unsplash.com/photo-1583241475880-083f84372725?q=80&w=800&auto=format&fit=crop",
     subcategories: [
       "Coffrets Visage",
       "Coffrets Corps",
-      "Coffrets Maquillage",
+      "Coffrets Rituels",
     ],
     featured: { label: "Idée Cadeau", name: "Rituel Complet", price: "185 000 FCFA" },
   },
