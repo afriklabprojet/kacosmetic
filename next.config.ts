@@ -13,6 +13,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' res.cloudinary.com images.unsplash.com data: blob:",
+      "media-src 'self' res.cloudinary.com",
       "font-src 'self'",
       "connect-src 'self' api.jeko.africa https://vitals.vercel-insights.com https://va.vercel-scripts.com",
     ].join("; "),
