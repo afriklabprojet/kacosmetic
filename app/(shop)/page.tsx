@@ -19,63 +19,120 @@ export const metadata: Metadata = {
     "Découvrez Ka Cosmetic, la boutique de cosmétiques premium à Abidjan. Soins visage, corps, maquillage et parfums pensés pour les peaux noires et métissées. Livraison J0 & J+1 dans tout Abidjan. Wave, Orange Money, Visa acceptés.",
 }
 
-// C — 4 catégories pour remplir la grille bento correctement (2+1 / 1+1 = 4 cols × 2 rows)
-const CATEGORIES = [
-  {
-    name: "Soins Visage",
-    slug: "soins-visage",
-    image: "https://images.unsplash.com/photo-1556228578-8d89b6acb68a?q=80&w=1200&auto=format&fit=crop",
-    label: "Éclat & Jeunesse",
-    index: "01",
-    colSpan: "md:col-span-2 md:row-span-2",
-  },
-  {
-    name: "Corps & Bain",
-    slug: "corps-bain",
-    image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=800&auto=format&fit=crop",
-    label: "Rituel Corps",
-    index: "02",
-    colSpan: "md:col-span-1 md:row-span-1",
-  },
-]
+// ── Fallback content ──────────────────────────────────────────────────────────
 
-// F — Engagements de marque
-const ENGAGEMENTS = [
+const HERO_DEFAULTS = {
+  tagline: "La Fée de la Perfection",
+  heading: "Sublime,|Par Nature.",
+  description:
+    "L'art de révéler votre lumière intérieure. Des rituels de beauté pensés pour l'excellence et la diversité des peaux noires et métissées.",
+}
+
+const RITUEL_DEFAULTS = {
+  title: "Le Rituel de la|Fée",
+  description:
+    "Fondée sur les secrets ancestraux de beauté africaine et sublimée par la science botanique moderne. Ka Cosmetic ne se contente pas de corriger — nous révélons l'éclat originel de chaque carnation avec une précision d'orfèvre.",
+}
+
+interface Engagement { title: string; description: string }
+interface Review {
+  id: number
+  name: string
+  location: string
+  rating: number
+  text: string
+  product: string
+  date: string
+  initials: string
+}
+
+const DEFAULT_ENGAGEMENTS: Engagement[] = [
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    ),
     title: "Formules Clean",
-    description: "Cruelty-free, sans parabènes ni sulfates. Certifiées adaptées aux peaux noires et métissées.",
+    description:
+      "Cruelty-free, sans parabènes ni sulfates. Certifiées adaptées aux peaux noires et métissées.",
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-        <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
-        <rect x="9" y="11" width="14" height="10" rx="2" />
-        <circle cx="12" cy="21" r="1" />
-        <circle cx="20" cy="21" r="1" />
-      </svg>
-    ),
     title: "Livraison J0 & J+1",
     description: "Emballage éco-luxe, livraison J0 & J+1 dans tout Abidjan.",
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
     title: "Paiement 100% Sécurisé",
-    description: "Wave, Orange Money, MTN, Djamo, Visa & Mastercard — cryptage bancaire de bout en bout.",
+    description:
+      "Wave, Orange Money, MTN, Djamo, Visa & Mastercard — cryptage bancaire de bout en bout.",
   },
 ]
 
-// Bestsellers : tri par popularityScore (colonne dénormalisée indexée — O(log n))
-// Remplace l'ancienne agrégation COUNT(orderItems) non indexée
+const DEFAULT_TESTIMONIALS: Review[] = [
+  {
+    id: 1,
+    name: "Aminata K.",
+    location: "Cocody, Abidjan",
+    rating: 5,
+    text: "La crème éclat a totalement transformé mon teint en 2 semaines. Mon visage est lumineux comme jamais. Je recommande à toutes mes amies !",
+    product: "Crème Éclat Botanique",
+    date: "Juin 2026",
+    initials: "AK",
+  },
+  {
+    id: 2,
+    name: "Fatou D.",
+    location: "Plateau, Abidjan",
+    rating: 5,
+    text: "J'utilise Ka Cosmetic depuis 6 mois. La livraison est toujours rapide, les produits sont authentiques et l'emballage est luxueux. Je suis une cliente fidèle.",
+    product: "Sérum Vitamine C",
+    date: "Mai 2026",
+    initials: "FD",
+  },
+  {
+    id: 3,
+    name: "Mariame T.",
+    location: "Yopougon, Abidjan",
+    rating: 5,
+    text: "Enfin des produits pensés pour nos peaux noires ! Résultats visibles dès la première semaine. Le service client est exceptionnel.",
+    product: "Huile Corps Karité",
+    date: "Juin 2026",
+    initials: "MT",
+  },
+  {
+    id: 4,
+    name: "Kadiatou B.",
+    location: "Marcory, Abidjan",
+    rating: 5,
+    text: "Le coffret cadeau que j'ai offert à ma mère était magnifiquement emballé. Elle a adoré chaque produit. Ka Cosmetic c'est du luxe accessible !",
+    product: "Coffret Prestige",
+    date: "Mai 2026",
+    initials: "KB",
+  },
+]
+
+const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+  "soins-visage":
+    "https://images.unsplash.com/photo-1556228578-8d89b6acb68a?q=80&w=1200&auto=format&fit=crop",
+  "corps-bain":
+    "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=800&auto=format&fit=crop",
+}
+const DEFAULT_CATEGORY_IMAGE =
+  "https://images.unsplash.com/photo-1512207736890-6ffed8a84e8d?q=80&w=800&auto=format&fit=crop"
+
+const ENGAGEMENT_ICONS = [
+  <svg key="clean" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>,
+  <svg key="delivery" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+    <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
+    <rect x="9" y="11" width="14" height="10" rx="2" />
+    <circle cx="12" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+  </svg>,
+  <svg key="secure" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>,
+]
+
+// ── Data fetchers ─────────────────────────────────────────────────────────────
+
 const getBestSellersCached = unstable_cache(
   () =>
     prisma.product.findMany({
@@ -128,37 +185,98 @@ const getPromoProductsCached = unstable_cache(
   { revalidate: 3600, tags: ["products"] }
 )
 
-const RITUEL_FALLBACK = {
-  mediaType: "video" as const,
-  url: "/videos/aaa.mp4",
-}
-
-async function getRituelConfig(): Promise<{ mediaType: "image" | "video"; url: string }> {
-  try {
-    const row = await prisma.siteSetting.findUnique({ where: { key: "rituel_section" } })
-    if (!row) return RITUEL_FALLBACK
-    const parsed = JSON.parse(row.value) as { mediaType: "image" | "video"; url: string }
-    if (!parsed.mediaType || !parsed.url) return RITUEL_FALLBACK
-    return parsed
-  } catch {
-    return RITUEL_FALLBACK
-  }
-}
-
 const getRituelConfigCached = unstable_cache(
-  getRituelConfig,
+  async () => {
+    try {
+      const row = await prisma.siteSetting.findUnique({ where: { key: "rituel_section" } })
+      if (!row) return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+      const parsed = JSON.parse(row.value) as { mediaType: "image" | "video"; url: string }
+      if (!parsed.mediaType || !parsed.url) return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+      return parsed
+    } catch {
+      return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+    }
+  },
   ["home-rituel-config"],
   { revalidate: 3600, tags: ["site-settings"] }
 )
 
+const getHomeCategoriesCached = unstable_cache(
+  () =>
+    prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      take: 3,
+      select: { name: true, slug: true, imageUrl: true },
+    }),
+  ["home-categories"],
+  { revalidate: 3600, tags: ["categories"] }
+)
+
+const HOME_SETTING_KEYS = [
+  "hero_tagline",
+  "hero_heading",
+  "hero_description",
+  "rituel_title",
+  "rituel_description",
+  "engagements",
+  "testimonials",
+  "newsletter_description",
+] as const
+
+const getHomeSettingsCached = unstable_cache(
+  async () => {
+    const rows = await prisma.siteSetting.findMany({
+      where: { key: { in: [...HOME_SETTING_KEYS] } },
+    })
+    const result: Record<string, string> = {}
+    for (const row of rows) result[row.key] = row.value
+    return result
+  },
+  ["home-settings"],
+  { revalidate: 3600, tags: ["site-settings"] }
+)
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
-  const [bestSellers, promos, rituelConfig] = await Promise.all([
+  const [bestSellers, promos, rituelConfig, categories, settings] = await Promise.all([
     getBestSellersCached(),
     getPromoProductsCached(),
     getRituelConfigCached(),
+    getHomeCategoriesCached(),
+    getHomeSettingsCached(),
   ])
 
-  // JSON-LD Organization — données statiques, pas d'input utilisateur
+  const heroTagline = settings.hero_tagline ?? HERO_DEFAULTS.tagline
+  const heroHeadingRaw = settings.hero_heading ?? HERO_DEFAULTS.heading
+  const [heroLine1, heroLine2] = heroHeadingRaw.split("|")
+  const heroDesc = settings.hero_description ?? HERO_DEFAULTS.description
+
+  const rituelTitleRaw = settings.rituel_title ?? RITUEL_DEFAULTS.title
+  const [rituelLine1, rituelLine2] = rituelTitleRaw.split("|")
+  const rituelDesc = settings.rituel_description ?? RITUEL_DEFAULTS.description
+
+  let engagements: Engagement[] = DEFAULT_ENGAGEMENTS
+  if (settings.engagements) {
+    try {
+      const parsed = JSON.parse(settings.engagements) as Engagement[]
+      if (Array.isArray(parsed) && parsed.length > 0) engagements = parsed
+    } catch { /* use default */ }
+  }
+
+  let testimonials: Review[] = DEFAULT_TESTIMONIALS
+  if (settings.testimonials) {
+    try {
+      const parsed = JSON.parse(settings.testimonials) as Review[]
+      if (Array.isArray(parsed) && parsed.length > 0) testimonials = parsed
+    } catch { /* use default */ }
+  }
+
+  const newsletterDesc = settings.newsletter_description ??
+    "Rituels inédits, offres privées et avant-premières réservées aux membres."
+
+  // JSON-LD uses only hardcoded static data — no user input
   const orgJsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BeautySalon",
@@ -178,8 +296,9 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Static JSON-LD — no user input, JSON.stringify encodes special chars */}
+      {/* eslint-disable-next-line react/no-danger -- JSON-LD, static data only, no XSS risk */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
+
       {/* ── Hero plein écran ─────────────────────────────────── */}
       <section className="relative flex min-h-[100dvh] w-full items-end overflow-hidden bg-brun-dark pb-12 pt-32 md:pb-24">
         <div className="absolute inset-0 z-0">
@@ -201,31 +320,33 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 items-end gap-8 md:grid-cols-12">
 
             <div className="col-span-1 flex flex-col gap-6 md:col-span-8 md:gap-8">
-              {/* #5 — Eyebrow tagline marque */}
               <p
                 className="hero-reveal text-[10px] font-semibold uppercase tracking-[0.32em]"
                 style={{ animationDelay: "80ms", color: "rgba(201,162,39,0.75)" }}
               >
-                La Fée de la Perfection
+                {heroTagline}
               </p>
 
               <h1
                 className="hero-reveal font-display text-fluid-hero text-or italic"
                 style={{ animationDelay: "200ms" }}
               >
-                Sublime,<br />
-                <span className="text-ivoire not-italic">Par Nature.</span>
+                {heroLine1}
+                {heroLine2 && (
+                  <>
+                    <br />
+                    <span className="text-ivoire not-italic">{heroLine2}</span>
+                  </>
+                )}
               </h1>
 
               <p
                 className="hero-reveal max-w-md text-base font-light leading-relaxed md:text-lg"
                 style={{ animationDelay: "400ms", color: "rgba(248,245,241,0.80)" }}
               >
-                L&apos;art de révéler votre lumière intérieure. Des rituels de beauté pensés pour
-                l&apos;excellence et la diversité des peaux noires et métissées.
+                {heroDesc}
               </p>
 
-              {/* #2 — CTA principal + CTA secondaire */}
               <div
                 className="hero-reveal flex flex-col gap-3 pt-2 sm:flex-row sm:items-center"
                 style={{ animationDelay: "600ms" }}
@@ -251,7 +372,6 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* #3 — Stats après CTA (700ms), #6 — avec étoiles / social proof */}
             <div
               className="hero-reveal hidden flex-col items-end gap-8 pb-4 md:col-span-4 md:flex"
               style={{ animationDelay: "700ms" }}
@@ -285,7 +405,7 @@ export default async function HomePage() {
       {/* ── Marquee divider gold ──────────────────────────────── */}
       <MarqueeDivider />
 
-      {/* ── Catégories bento (B — grille corrigée 4 cols × 2 rows) ── */}
+      {/* ── Catégories bento ─────────────────────────────────── */}
       <section className="fade-in-section px-4 py-20 md:px-8 md:py-24">
         <div className="mx-auto max-w-[1400px]">
           <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
@@ -301,60 +421,55 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {/* Desktop bento / mobile scroll horizontal */}
           <div className="flex h-[60vh] overflow-x-auto snap-x snap-mandatory gap-4 pb-4 no-scrollbar md:grid md:grid-cols-3 md:grid-rows-2 md:h-[620px] md:overflow-visible md:pb-0">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/catalogue/${cat.slug}`}
-                className={`image-zoom-container group relative flex-shrink-0 w-[80vw] snap-center overflow-hidden rounded-2xl cursor-pointer ${cat.colSpan} md:w-auto`}
-              >
-                <Image
-                  src={cat.image}
-                  alt={cat.name}
-                  fill
-                  sizes="(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover"
-                />
-                <div
-                  className="absolute inset-0"
-                  style={{ background: "linear-gradient(to top, rgba(31,31,31,0.82) 0%, transparent 60%)" }}
-                  aria-hidden="true"
-                />
-                <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
-                  <div>
-                    <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-or mb-1.5">{cat.index}</span>
-                    <h3 className="font-display text-2xl text-white md:text-3xl">{cat.name}</h3>
+            {categories.map((cat, i) => {
+              const imgSrc =
+                cat.imageUrl ??
+                CATEGORY_FALLBACK_IMAGES[cat.slug] ??
+                DEFAULT_CATEGORY_IMAGE
+              const colSpan =
+                i === 0
+                  ? "md:col-span-2 md:row-span-2"
+                  : "md:col-span-1 md:row-span-1"
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/catalogue/${cat.slug}`}
+                  className={`image-zoom-container group relative flex-shrink-0 w-[80vw] snap-center overflow-hidden rounded-2xl cursor-pointer ${colSpan} md:w-auto`}
+                >
+                  <Image
+                    src={imgSrc}
+                    alt={cat.name}
+                    fill
+                    sizes="(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(to top, rgba(31,31,31,0.82) 0%, transparent 60%)" }}
+                    aria-hidden="true"
+                  />
+                  <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
+                    <div>
+                      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-or mb-1.5">
+                        0{i + 1}
+                      </span>
+                      <h3 className="font-display text-2xl text-white md:text-3xl">{cat.name}</h3>
+                    </div>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-or text-or transition-all duration-300 group-hover:bg-or group-hover:text-ebene">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d="M7 17L17 7M7 7h10v10" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-or text-or transition-all duration-300 group-hover:bg-or group-hover:text-ebene">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M7 17L17 7M7 7h10v10" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            ))}
-
-            {/* Coffrets — cream tile (occupe la dernière cellule) */}
-            <Link
-              href="/catalogue/coffrets"
-              className="group relative flex-shrink-0 w-[60vw] snap-center overflow-hidden rounded-2xl cursor-pointer bg-creme border border-or/40 flex flex-col items-center justify-center text-center p-6 md:col-span-1 md:row-span-1 md:w-auto"
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-or mb-4 transition-transform duration-500 group-hover:scale-110" aria-hidden="true">
-                <path d="M20 12v10H4V12" />
-                <path d="M22 7H2v5h20V7z" />
-                <path d="M12 22V7" />
-                <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
-                <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
-              </svg>
-              <h3 className="font-display text-lg text-ebene">Coffrets<br />Exclusifs</h3>
-              <span className="mt-3 text-[10px] uppercase tracking-[0.2em] text-or">03</span>
-            </Link>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── Bestsellers (C — une seule grille produits) ──────── */}
+      {/* ── Bestsellers ──────────────────────────────────────── */}
       {bestSellers.length > 0 && (
         <section id="bestsellers" className="fade-in-section px-4 py-20 md:px-8 md:py-24 bg-creme">
           <div className="mx-auto max-w-[1400px]">
@@ -395,7 +510,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Brand story split screen (D — nouvelle image) ────── */}
+      {/* ── Brand story split screen ──────────────────────────── */}
       <section className="fade-in-section overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 min-h-[60vh]">
           <div className="relative h-[50vh] md:h-auto order-2 md:order-1">
@@ -421,13 +536,16 @@ export default async function HomePage() {
           <div className="bg-ivoire flex flex-col justify-center items-start px-8 py-16 md:px-16 lg:px-24 order-1 md:order-2">
             <span className="text-3xl text-or mb-6" aria-hidden="true">✦</span>
             <h2 className="font-display text-3xl text-ebene mb-5 md:text-5xl">
-              Le Rituel de la{" "}
-              <em className="text-brun not-italic">Fée</em>
+              {rituelLine1}
+              {rituelLine2 && (
+                <>
+                  {" "}
+                  <em className="text-brun not-italic">{rituelLine2}</em>
+                </>
+              )}
             </h2>
             <p className="text-sm leading-loose text-taupe max-w-md mb-8 md:text-base">
-              Fondée sur les secrets ancestraux de beauté africaine et sublimée par la science
-              botanique moderne. Ka Cosmetic ne se contente pas de corriger — nous révélons
-              l&apos;éclat originel de chaque carnation avec une précision d&apos;orfèvre.
+              {rituelDesc}
             </p>
             <Link
               href="/a-propos"
@@ -456,12 +574,12 @@ export default async function HomePage() {
       />
 
       {/* ── Avis clients ─────────────────────────────────────── */}
-      <TestimonialsSection />
+      <TestimonialsSection reviews={testimonials} />
 
       {/* ── Newsletter ───────────────────────────────────────── */}
-      <NewsletterSection />
+      <NewsletterSection description={newsletterDesc} />
 
-      {/* ── Nos 3 engagements ────────────────────────────────── */}
+      {/* ── Nos engagements ──────────────────────────────────── */}
       <section className="fade-in-section px-4 py-20 md:px-8 md:py-24" style={{ background: "linear-gradient(160deg, #1F1F1F 0%, #2d1a09 100%)" }}>
         <div className="mx-auto max-w-[1400px]">
           <div className="mb-14 text-center">
@@ -475,9 +593,9 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {ENGAGEMENTS.map((item) => (
+            {engagements.map((item, i) => (
               <div
-                key={item.title}
+                key={item.title || i}
                 className="flex flex-col items-center text-center rounded-2xl px-8 py-10"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.2)" }}
               >
@@ -485,7 +603,7 @@ export default async function HomePage() {
                   className="mb-5 flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "rgba(201,162,39,0.12)", color: "#C9A227", border: "1px solid rgba(201,162,39,0.3)" }}
                 >
-                  {item.icon}
+                  {ENGAGEMENT_ICONS[i % ENGAGEMENT_ICONS.length]}
                 </div>
                 <h3 className="font-display text-xl mb-3" style={{ color: "#F8F5F1" }}>{item.title}</h3>
                 <p className="text-sm font-light leading-relaxed" style={{ color: "rgba(248,245,241,0.55)" }}>{item.description}</p>
