@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import WishlistButton from "./WishlistButton"
+import AddToCartButton from "./AddToCartButton"
 
 export interface ProductCardProps {
   id: string
@@ -13,6 +14,7 @@ export interface ProductCardProps {
   blurDataUrl?: string | null
   isFeatured?: boolean
   inStock?: boolean
+  variantId?: string
 }
 
 function formatPrice(amount: number): string {
@@ -30,6 +32,7 @@ export default function ProductCard({
   blurDataUrl,
   isFeatured = false,
   inStock = true,
+  variantId,
 }: Readonly<ProductCardProps>) {
   const discount =
     comparePrice && comparePrice > price
@@ -130,22 +133,19 @@ export default function ProductCard({
 
         {/* CTA mobile */}
         <div className="mt-3 md:hidden">
-          {inStock ? (
-            <button
-              type="button"
-              className="w-full cursor-pointer rounded-lg border border-[#C9A227]/40 bg-[#1F1F1F] py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F8F5F1] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[#C9A227] hover:border-[#C9A227] hover:text-[#1F1F1F]"
-              aria-label={`Ajouter ${name} au panier`}
-            >
-              Ajouter au panier
-            </button>
+          {variantId ? (
+            <AddToCartButton
+              variantId={variantId}
+              productName={name}
+              disabled={!inStock}
+            />
           ) : (
-            <button
-              type="button"
-              disabled
-              className="w-full cursor-not-allowed rounded-lg border border-[#EDE8E1] bg-[#F5F0EA] py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[#6B5744]/50"
+            <Link
+              href={`/produit/${slug}`}
+              className="block w-full rounded-lg border border-[#C9A227]/40 bg-[#1F1F1F] py-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F8F5F1] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[#C9A227] hover:border-[#C9A227] hover:text-[#1F1F1F]"
             >
-              Épuisé
-            </button>
+              {inStock ? "Voir le produit" : "Épuisé"}
+            </Link>
           )}
         </div>
       </div>
