@@ -19,7 +19,6 @@ const FOOTER_LINKS = {
   boutique: [
     { label: "Soins Visage", href: "/catalogue/soins-visage" },
     { label: "Corps & Bain", href: "/catalogue/corps-bain" },
-    { label: "Maquillage",   href: "/catalogue/maquillage" },
     { label: "Coffrets",     href: "/catalogue/coffrets" },
   ],
 }
