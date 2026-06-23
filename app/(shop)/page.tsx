@@ -189,12 +189,12 @@ const getRituelConfigCached = unstable_cache(
   async () => {
     try {
       const row = await prisma.siteSetting.findUnique({ where: { key: "rituel_section" } })
-      if (!row) return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+      if (!row) return { mediaType: "video" as const, url: "/videos/hero.mp4" }
       const parsed = JSON.parse(row.value) as { mediaType: "image" | "video"; url: string }
-      if (!parsed.mediaType || !parsed.url) return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+      if (!parsed.mediaType || !parsed.url) return { mediaType: "video" as const, url: "/videos/hero.mp4" }
       return parsed
     } catch {
-      return { mediaType: "video" as const, url: "/videos/aaa.mp4" }
+      return { mediaType: "video" as const, url: "/videos/hero.mp4" }
     }
   },
   ["home-rituel-config"],
