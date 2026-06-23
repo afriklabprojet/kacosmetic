@@ -83,15 +83,6 @@ export default function RituelSection({ mediaType, mediaUrl, titleLine1, titleLi
         {/* ── Text panel ── */}
         <div ref={contentRef} className="bg-ivoire flex flex-col justify-center items-start px-8 py-16 md:px-16 lg:px-24 order-1 md:order-2">
 
-          {/* ✦ ornament */}
-          <span
-            className="text-3xl text-or mb-6"
-            aria-hidden="true"
-            style={{ display: "inline-block" }}
-          >
-            ✦
-          </span>
-
           {/* Heading */}
           <h2 className="font-display text-3xl text-ebene mb-5 md:text-5xl">
             {titleLine1}
