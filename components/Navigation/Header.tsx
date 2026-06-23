@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma"
 import { unstable_cache } from "next/cache"
 import HeaderClient, { type NavCategory } from "./HeaderClient"
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1556228578-8d89b6acb68a?q=80&w=800&auto=format&fit=crop"
 const FALLBACK_FEATURED = { label: "Collection", name: "Découvrir", price: "" }
 
 const getNavCategories = unstable_cache(
@@ -15,7 +14,7 @@ const getNavCategories = unstable_cache(
     return cats.map((cat) => ({
       label: cat.name,
       href: `/catalogue/${cat.slug}`,
-      image: cat.imageUrl ?? FALLBACK_IMAGE,
+      image: cat.imageUrl ?? "",
       subcategories: cat.description
         ? cat.description.split("|").map((s) => s.trim()).filter(Boolean)
         : [],
