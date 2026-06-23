@@ -84,6 +84,32 @@ async function createCategory(formData: FormData): Promise<void> {
   }
 }
 
+async function deleteCategory(id: string): Promise<void> {
+  "use server"
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return
+
+  const category = await prisma.category.findUnique({
+    where: { id },
+    include: { _count: { select: { products: true } } },
+  })
+  if (!category) throw new Error("Catégorie introuvable.")
+  if (category._count.products > 0) {
+    throw new Error(
+      `Impossible de supprimer : ${category._count.products} produit(s) sont liés à cette catégorie.`
+    )
+  }
+
+  try {
+    await prisma.category.delete({ where: { id } })
+    revalidatePath("/admin/categories")
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Erreur lors de la suppression."
+    throw new Error(message)
+  }
+}
+
 async function toggleCategoryActive(id: string, currentValue: boolean): Promise<void> {
   "use server"
   const session = await auth()
@@ -139,6 +165,27 @@ function ToggleForm({ categoryId, isActive, toggleAction }: Readonly<ToggleFormP
   )
 }
 
+interface DeleteFormProps {
+  categoryId: string
+  productCount: number
+  deleteAction: (id: string) => Promise<void>
+}
+
+function DeleteForm({ categoryId, productCount, deleteAction }: Readonly<DeleteFormProps>) {
+  const boundAction = deleteAction.bind(null, categoryId)
+  if (productCount > 0) return null
+  return (
+    <form action={boundAction}>
+      <button
+        type="submit"
+        className="text-xs text-red-500 underline-offset-2 hover:underline focus:outline-none"
+      >
+        Supprimer
+      </button>
+    </form>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AdminCategoriesPage() {
@@ -172,7 +219,7 @@ export default async function AdminCategoriesPage() {
         <table className="w-full text-sm">
           <thead className="border-b border-or-light bg-ivoire">
             <tr>
-              {["Nom", "Slug", "Produits", "Ordre", "Statut", "Action"].map((h) => (
+              {["Nom", "Slug", "Produits", "Ordre", "Statut", "Activer/Désactiver", ""].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-taupe"
@@ -185,7 +232,7 @@ export default async function AdminCategoriesPage() {
           <tbody className="divide-y divide-[#E5D5C5]">
             {categories.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-taupe">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-taupe">
                   Aucune catégorie pour l&apos;instant.
                 </td>
               </tr>
@@ -212,6 +259,13 @@ export default async function AdminCategoriesPage() {
                       categoryId={cat.id}
                       isActive={cat.isActive}
                       toggleAction={toggleCategoryActive}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <DeleteForm
+                      categoryId={cat.id}
+                      productCount={cat._count.products}
+                      deleteAction={deleteCategory}
                     />
                   </td>
                 </tr>
