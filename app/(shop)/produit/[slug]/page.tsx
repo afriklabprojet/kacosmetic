@@ -218,6 +218,7 @@ export default async function ProductPage({ params }: Readonly<Props>) {
                     comparePrice={v?.comparePrice}
                     imageUrl={img?.url ?? "/placeholder-product.jpg"}
                     blurDataUrl={img?.blurHash}
+                    isFeatured={p.isFeatured}
                     inStock={(v?.stock ?? 0) - (v?.reservedStock ?? 0) > 0}
                   />
                 )
