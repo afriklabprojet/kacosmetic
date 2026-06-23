@@ -5,7 +5,6 @@ import { useRef, useState, useEffect, useCallback } from "react"
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface RituelConfig { mediaType: "image" | "video"; url: string }
-
 interface Announcement { text: string; highlight?: string }
 interface SocialLink    { label: string; href: string }
 interface Testimonial   { id: number; name: string; location: string; rating: number; text: string; product: string; date: string; initials: string }
@@ -26,37 +25,98 @@ interface TextSettings {
   brand_tagline?: string
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error"
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function SectionCard({ title, subtitle, children }: Readonly<{ title: string; subtitle?: string; children: React.ReactNode }>) {
-  return (
-    <div className="overflow-hidden rounded-lg border border-[#E5D5C5] bg-white shadow-sm">
-      <div className="border-b border-[#E5D5C5] bg-[#FAF6F1] px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#6B5744]">{title}</p>
-        {subtitle && <p className="mt-0.5 text-xs text-[#6B5744]/70">{subtitle}</p>}
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  )
-}
-
-function SaveButton({ saving, saved }: Readonly<{ saving: boolean; saved: boolean }>) {
-  return (
-    <button
-      type="submit"
-      disabled={saving}
-      className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] transition-colors hover:bg-[#b8932a] disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {saving ? "Enregistrement…" : saved ? "✓ Enregistré" : "Enregistrer"}
-    </button>
-  )
-}
 
 function inputCls(extra = "") {
   return `w-full rounded border border-[#E5D5C5] bg-[#FAF6F1] px-3 py-2 text-sm text-[#1A0A00] placeholder:text-[#6B5744]/50 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]/40 ${extra}`
 }
 
-// ─── Sub-sections ─────────────────────────────────────────────────────────────
+function SaveBtn({ status, onClick }: Readonly<{ status: SaveStatus; onClick: () => void }>) {
+  const label =
+    status === "saving" ? "Enregistrement…"
+    : status === "saved" ? "✓ Enregistré"
+    : status === "error" ? "⚠ Réessayer"
+    : "Enregistrer"
+  const colorCls =
+    status === "saved" ? "bg-green-600 hover:bg-green-700 text-white"
+    : status === "error" ? "bg-red-500 hover:bg-red-600 text-white"
+    : "bg-[#C9A84C] hover:bg-[#b8932a] text-[#1A0A00]"
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={status === "saving"}
+      className={`rounded px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${colorCls}`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function Hint({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <p className="mt-1 text-[11px] text-[#6B5744]/60">{children}</p>
+}
+
+interface SectionProps {
+  id: string
+  title: string
+  subtitle?: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+}
+
+function Section({ id, title, subtitle, defaultOpen = false, children }: Readonly<SectionProps>) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div id={id} className="overflow-hidden rounded-lg border border-[#E5D5C5] bg-white shadow-sm scroll-mt-6">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center justify-between border-b border-[#E5D5C5] bg-[#FAF6F1] px-4 py-3 text-left transition-colors hover:bg-[#F0E8DE]"
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#6B5744]">{title}</p>
+          {subtitle && <p className="mt-0.5 text-xs text-[#6B5744]/70">{subtitle}</p>}
+        </div>
+        <span className={`ml-4 shrink-0 text-[#6B5744]/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          ▾
+        </span>
+      </button>
+      {open && <div className="p-4">{children}</div>}
+    </div>
+  )
+}
+
+// ─── Per-section save hook ────────────────────────────────────────────────────
+
+function useSave() {
+  const [statuses, setStatuses] = useState<Record<string, SaveStatus>>({})
+
+  const save = useCallback(async (key: string, patch: Partial<TextSettings>) => {
+    setStatuses(prev => ({ ...prev, [key]: "saving" }))
+    try {
+      const res = await fetch("/api/admin/site-settings/text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      })
+      if (res.ok) {
+        setStatuses(prev => ({ ...prev, [key]: "saved" }))
+        setTimeout(() => setStatuses(prev => ({ ...prev, [key]: "idle" })), 2500)
+      } else {
+        setStatuses(prev => ({ ...prev, [key]: "error" }))
+      }
+    } catch {
+      setStatuses(prev => ({ ...prev, [key]: "error" }))
+    }
+  }, [])
+
+  return { save, status: (key: string): SaveStatus => statuses[key] ?? "idle" }
+}
+
+// ─── Rituel Media Section ─────────────────────────────────────────────────────
 
 function RituelMediaSection() {
   const [current, setCurrent] = useState<RituelConfig | null>(null)
@@ -99,7 +159,7 @@ function RituelMediaSection() {
   }
 
   return (
-    <SectionCard title="Section Rituel — média" subtitle="Photo ou vidéo de fond">
+    <Section id="rituel-media" title="Section Rituel — Média" subtitle="Photo ou vidéo de fond de la section histoire">
       {current && (
         <div className="mb-4 overflow-hidden rounded border border-[#E5D5C5]">
           <div className="relative aspect-video w-full bg-[#F5EFE6]">
@@ -108,6 +168,7 @@ function RituelMediaSection() {
               // eslint-disable-next-line @next/next/no-img-element
               : <img src={current.url} alt="Média actuel" className="h-full w-full object-cover" />}
           </div>
+          <p className="px-3 py-1.5 text-[11px] text-[#6B5744]/60">Média actuel</p>
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -116,6 +177,7 @@ function RituelMediaSection() {
           onChange={handleFileChange}
           className="block w-full rounded border border-[#E5D5C5] bg-[#FAF6F1] px-3 py-2 text-sm text-[#1A0A00] file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-[#C9A84C] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#1A0A00] hover:file:bg-[#b8932a]"
         />
+        <Hint>Formats acceptés : JPG, PNG, WEBP, MP4, WEBM — max 50 Mo</Hint>
         {previewUrl && previewType && (
           <div className="overflow-hidden rounded border border-[#E5D5C5]">
             <div className="relative aspect-video w-full bg-[#F5EFE6]">
@@ -124,62 +186,58 @@ function RituelMediaSection() {
                 // eslint-disable-next-line @next/next/no-img-element
                 : <img src={previewUrl} alt="Aperçu" className="h-full w-full object-cover" />}
             </div>
+            <p className="px-3 py-1.5 text-[11px] text-[#6B5744]/60">Aperçu avant envoi</p>
           </div>
         )}
         {status === "error" && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-600">{errorMsg}</p>}
-        {status === "success" && <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">Média mis à jour.</p>}
-        <SaveButton saving={status === "uploading"} saved={status === "success"} />
+        {status === "success" && <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">✓ Média mis à jour.</p>}
+        <button type="submit" disabled={status === "uploading" || !previewUrl}
+          className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] transition-colors hover:bg-[#b8932a] disabled:cursor-not-allowed disabled:opacity-40">
+          {status === "uploading" ? "Envoi en cours…" : "Enregistrer le média"}
+        </button>
       </form>
-    </SectionCard>
+    </Section>
   )
 }
 
-// ─── Generic text settings form ───────────────────────────────────────────────
+// ─── Navigation anchors ───────────────────────────────────────────────────────
 
-function useTextSettings() {
-  const [settings, setSettings] = useState<TextSettings>({})
-  const [loaded, setLoaded] = useState(false)
+const NAV_SECTIONS = [
+  { id: "annonces",       label: "Annonces" },
+  { id: "marquee",        label: "Marquee" },
+  { id: "hero",           label: "Hero" },
+  { id: "rituel-texte",   label: "Rituel" },
+  { id: "engagements",    label: "Engagements" },
+  { id: "temoignages",    label: "Témoignages" },
+  { id: "sociaux",        label: "Réseaux" },
+  { id: "newsletter",     label: "Newsletter" },
+  { id: "rituel-media",   label: "Média" },
+]
 
-  useEffect(() => {
-    fetch("/api/admin/site-settings/text")
-      .then(r => r.json())
-      .then((d: TextSettings) => { setSettings(d); setLoaded(true) })
-      .catch(() => setLoaded(true))
-  }, [])
-
-  return { settings, setSettings, loaded }
-}
-
-function useSave(settings: TextSettings, setSettings: React.Dispatch<React.SetStateAction<TextSettings>>) {
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  const save = useCallback(async (patch: Partial<TextSettings>) => {
-    setSaving(true); setSaved(false)
-    try {
-      const res = await fetch("/api/admin/site-settings/text", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      })
-      if (res.ok) {
-        setSettings(prev => ({ ...prev, ...patch }))
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2500)
-      }
-    } finally { setSaving(false) }
-  }, [setSettings])
-
-  return { save, saving, saved }
+function SectionNav() {
+  return (
+    <nav className="flex flex-wrap gap-2" aria-label="Sections">
+      {NAV_SECTIONS.map(s => (
+        <a
+          key={s.id}
+          href={`#${s.id}`}
+          className="rounded-full border border-[#E5D5C5] bg-white px-3 py-1 text-[11px] font-medium text-[#6B5744] transition-colors hover:border-[#C9A84C] hover:text-[#C9A84C]"
+        >
+          {s.label}
+        </a>
+      ))}
+    </nav>
+  )
 }
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function SiteSettingsPage() {
-  const { settings, setSettings, loaded } = useTextSettings()
-  const { save, saving, saved } = useSave(settings, setSettings)
+  const [settings, setSettings] = useState<TextSettings>({})
+  const [loaded, setLoaded] = useState(false)
+  const { save, status } = useSave()
 
-  // local draft states per section
+  // draft states per section
   const [ann, setAnn] = useState("")
   const [marquee, setMarquee] = useState("")
   const [socials, setSocials] = useState("")
@@ -192,7 +250,13 @@ export default function SiteSettingsPage() {
   const [rituelDesc, setRituelDesc] = useState("")
   const [newsletterDesc, setNewsletterDesc] = useState("")
 
-  // Populate drafts once loaded
+  useEffect(() => {
+    fetch("/api/admin/site-settings/text")
+      .then(r => r.json())
+      .then((d: TextSettings) => { setSettings(d); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }, [])
+
   useEffect(() => {
     if (!loaded) return
     setAnn(settings.announcements ?? "")
@@ -208,85 +272,82 @@ export default function SiteSettingsPage() {
     setNewsletterDesc(settings.newsletter_description ?? "")
   }, [loaded, settings])
 
-  // ── Announcement helpers
+  // ── JSON helpers ──────────────────────────────────────────────────────────
+
   function parseAnn(): Announcement[] {
     try { return JSON.parse(ann) as Announcement[] } catch { return [] }
   }
-  function stringifyAnn(items: Announcement[]) { setAnn(JSON.stringify(items, null, 2)) }
-  function addAnn() { stringifyAnn([...parseAnn(), { text: "", highlight: "" }]) }
-  function removeAnn(i: number) { const a = parseAnn(); a.splice(i, 1); stringifyAnn(a) }
+  function setAnnItems(items: Announcement[]) { setAnn(JSON.stringify(items, null, 2)) }
+  function addAnn() { setAnnItems([...parseAnn(), { text: "", highlight: "" }]) }
+  function removeAnn(i: number) { const a = parseAnn(); a.splice(i, 1); setAnnItems(a) }
   function updateAnn(i: number, field: keyof Announcement, val: string) {
-    const a = parseAnn(); a[i] = { ...a[i], [field]: val }; stringifyAnn(a)
+    const a = parseAnn(); a[i] = { ...a[i], [field]: val }; setAnnItems(a)
   }
 
-  // ── Marquee helpers
   function parseMarquee(): string[] {
     try { return JSON.parse(marquee) as string[] } catch { return [] }
   }
-  function stringifyMarquee(items: string[]) { setMarquee(JSON.stringify(items, null, 2)) }
-  function addMarqueeItem() { stringifyMarquee([...parseMarquee(), ""]) }
-  function removeMarqueeItem(i: number) { const m = parseMarquee(); m.splice(i, 1); stringifyMarquee(m) }
-  function updateMarqueeItem(i: number, val: string) { const m = parseMarquee(); m[i] = val; stringifyMarquee(m) }
+  function setMarqueeItems(items: string[]) { setMarquee(JSON.stringify(items, null, 2)) }
+  function addMarqueeItem() { setMarqueeItems([...parseMarquee(), ""]) }
+  function removeMarqueeItem(i: number) { const m = parseMarquee(); m.splice(i, 1); setMarqueeItems(m) }
+  function updateMarqueeItem(i: number, val: string) { const m = parseMarquee(); m[i] = val; setMarqueeItems(m) }
 
-  // ── Social helpers
   function parseSocials(): SocialLink[] {
     try { return JSON.parse(socials) as SocialLink[] } catch { return [] }
   }
-  function stringifySocials(items: SocialLink[]) { setSocials(JSON.stringify(items, null, 2)) }
-  function addSocial() { stringifySocials([...parseSocials(), { label: "", href: "" }]) }
-  function removeSocial(i: number) { const s = parseSocials(); s.splice(i, 1); stringifySocials(s) }
+  function setSocialItems(items: SocialLink[]) { setSocials(JSON.stringify(items, null, 2)) }
+  function addSocial() { setSocialItems([...parseSocials(), { label: "", href: "" }]) }
+  function removeSocial(i: number) { const s = parseSocials(); s.splice(i, 1); setSocialItems(s) }
   function updateSocial(i: number, field: keyof SocialLink, val: string) {
-    const s = parseSocials(); s[i] = { ...s[i], [field]: val }; stringifySocials(s)
+    const s = parseSocials(); s[i] = { ...s[i], [field]: val }; setSocialItems(s)
   }
 
-  // ── Testimonial helpers
   function parseTestimonials(): Testimonial[] {
     try { return JSON.parse(testimonials) as Testimonial[] } catch { return [] }
   }
-  function stringifyTestimonials(items: Testimonial[]) { setTestimonials(JSON.stringify(items, null, 2)) }
+  function setTestimonialItems(items: Testimonial[]) { setTestimonials(JSON.stringify(items, null, 2)) }
   function addTestimonial() {
-    const items = parseTestimonials()
-    stringifyTestimonials([...items, { id: Date.now(), name: "", location: "", rating: 5, text: "", product: "", date: "", initials: "" }])
+    setTestimonialItems([...parseTestimonials(), { id: Date.now(), name: "", location: "", rating: 5, text: "", product: "", date: "", initials: "" }])
   }
-  function removeTestimonial(i: number) { const t = parseTestimonials(); t.splice(i, 1); stringifyTestimonials(t) }
+  function removeTestimonial(i: number) { const t = parseTestimonials(); t.splice(i, 1); setTestimonialItems(t) }
   function updateTestimonial(i: number, field: keyof Testimonial, val: string | number) {
-    const t = parseTestimonials(); t[i] = { ...t[i], [field]: val }; stringifyTestimonials(t)
+    const t = parseTestimonials(); t[i] = { ...t[i], [field]: val }; setTestimonialItems(t)
   }
 
-  // ── Engagement helpers
   function parseEngagements(): Engagement[] {
     try { return JSON.parse(engagements) as Engagement[] } catch { return [] }
   }
-  function stringifyEngagements(items: Engagement[]) { setEngagements(JSON.stringify(items, null, 2)) }
-  function addEngagement() { stringifyEngagements([...parseEngagements(), { title: "", description: "" }]) }
-  function removeEngagement(i: number) { const e = parseEngagements(); e.splice(i, 1); stringifyEngagements(e) }
+  function setEngagementItems(items: Engagement[]) { setEngagements(JSON.stringify(items, null, 2)) }
+  function addEngagement() { setEngagementItems([...parseEngagements(), { title: "", description: "" }]) }
+  function removeEngagement(i: number) { const e = parseEngagements(); e.splice(i, 1); setEngagementItems(e) }
   function updateEngagement(i: number, field: keyof Engagement, val: string) {
-    const e = parseEngagements(); e[i] = { ...e[i], [field]: val }; stringifyEngagements(e)
+    const e = parseEngagements(); e[i] = { ...e[i], [field]: val }; setEngagementItems(e)
   }
 
   if (!loaded) {
     return (
-      <div className="flex items-center gap-3 py-12 text-sm text-[#6B5744]">
-        <span className="animate-spin">↻</span> Chargement…
+      <div className="space-y-4 max-w-3xl">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-[#F0E8DE]" />
+        ))}
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-3xl space-y-6">
+
+      {/* ── En-tête ──────────────────────────────────────────── */}
       <div>
         <h1 className="font-display text-2xl font-semibold text-[#1A0A00] md:text-3xl">Paramètres du site</h1>
-        <p className="mt-1 text-sm text-[#6B5744]">Modifiez tous les textes et contenus visibles sur le site.</p>
+        <p className="mt-1 text-sm text-[#6B5744]">Modifiez tous les textes et contenus visibles sur le site. Chaque section se sauvegarde indépendamment.</p>
       </div>
 
-      {saved && (
-        <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700 border border-green-200">
-          ✓ Modifications enregistrées et publiées.
-        </div>
-      )}
+      {/* ── Navigation rapide ────────────────────────────────── */}
+      <SectionNav />
 
-      {/* ── 1. Barre d'annonces ───────────────────────────── */}
-      <SectionCard title="Barre d'annonces rotative" subtitle="Messages affichés en haut du site">
+      {/* ── 1. Annonces ──────────────────────────────────────── */}
+      <Section id="annonces" title="Barre d'annonces rotative" subtitle="Messages défilants en haut du site" defaultOpen>
         <div className="space-y-3">
           {parseAnn().map((item, i) => (
             <div key={i} className="rounded border border-[#E5D5C5] bg-[#FAF6F1] p-3 space-y-2">
@@ -295,50 +356,46 @@ export default function SiteSettingsPage() {
                 <button type="button" onClick={() => removeAnn(i)} className="text-xs text-red-400 hover:text-red-600">Supprimer</button>
               </div>
               <input className={inputCls()} placeholder="Texte complet de l'annonce" value={item.text} onChange={e => updateAnn(i, "text", e.target.value)} />
-              <input className={inputCls()} placeholder="Mot à mettre en surbrillance dorée (optionnel)" value={item.highlight ?? ""} onChange={e => updateAnn(i, "highlight", e.target.value)} />
+              <div>
+                <input className={inputCls()} placeholder="Mot en surbrillance dorée (optionnel)" value={item.highlight ?? ""} onChange={e => updateAnn(i, "highlight", e.target.value)} />
+                <Hint>Le mot doit être présent dans le texte pour s&apos;afficher en doré.</Hint>
+              </div>
             </div>
           ))}
           <button type="button" onClick={addAnn} className="text-xs text-[#C9A84C] hover:underline">+ Ajouter une annonce</button>
         </div>
         <div className="mt-4">
-          <SaveButton saving={saving} saved={false} />
-          <span className="ml-2" />
-          <button type="button" onClick={() => save({ announcements: ann })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>
-            {saving ? "Enregistrement…" : "Enregistrer"}
-          </button>
+          <SaveBtn status={status("annonces")} onClick={() => save("annonces", { announcements: ann })} />
         </div>
-      </SectionCard>
+      </Section>
 
       {/* ── 2. Marquee ───────────────────────────────────────── */}
-      <SectionCard title="Bandeau défilant (Marquee)" subtitle="Textes qui défilent en bande dorée">
+      <Section id="marquee" title="Bandeau défilant (Marquee)" subtitle="Textes qui défilent sur la bande dorée">
         <div className="space-y-2">
           {parseMarquee().map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <input className={inputCls("flex-1")} value={item} onChange={e => updateMarqueeItem(i, e.target.value)} placeholder="Texte défilant" />
+              <input className={inputCls("min-w-0 flex-1")} value={item} onChange={e => updateMarqueeItem(i, e.target.value)} placeholder="Texte défilant" />
               <button type="button" onClick={() => removeMarqueeItem(i)} className="text-xs text-red-400 hover:text-red-600 shrink-0">✕</button>
             </div>
           ))}
           <button type="button" onClick={addMarqueeItem} className="text-xs text-[#C9A84C] hover:underline">+ Ajouter un texte</button>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ marquee_items: marquee })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("marquee")} onClick={() => save("marquee", { marquee_items: marquee })} />
         </div>
-      </SectionCard>
+      </Section>
 
-      {/* ── 3. Hero copy ─────────────────────────────────────── */}
-      <SectionCard title="Section Hero" subtitle="Textes de la bannière principale">
+      {/* ── 3. Hero ──────────────────────────────────────────── */}
+      <Section id="hero" title="Section Hero" subtitle="Textes de la bannière principale (fond vidéo)">
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Tagline (petit texte doré)</label>
+            <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Tagline — petit texte doré</label>
             <input className={inputCls()} value={heroTagline} onChange={e => setHeroTagline(e.target.value)} placeholder="La Fée de la Perfection" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Titre principal</label>
-            <input className={inputCls()} value={heroHeading} onChange={e => setHeroHeading(e.target.value)} placeholder="Sublime, Par Nature." />
+            <input className={inputCls()} value={heroHeading} onChange={e => setHeroHeading(e.target.value)} placeholder="Sublime,|Par Nature." />
+            <Hint>Utilisez <code className="rounded bg-[#E5D5C5] px-1">|</code> pour couper le titre en deux lignes (ex : <code className="rounded bg-[#E5D5C5] px-1">Sublime,|Par Nature.</code>)</Hint>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Description</label>
@@ -346,33 +403,30 @@ export default function SiteSettingsPage() {
           </div>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ hero_tagline: heroTagline, hero_heading: heroHeading, hero_description: heroDesc })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("hero")} onClick={() => save("hero", { hero_tagline: heroTagline, hero_heading: heroHeading, hero_description: heroDesc })} />
         </div>
-      </SectionCard>
+      </Section>
 
-      {/* ── 4. Section Rituel copy ───────────────────────────── */}
-      <SectionCard title="Section Rituel — texte" subtitle="Titre et description de la section histoire de marque">
+      {/* ── 4. Section Rituel — texte ────────────────────────── */}
+      <Section id="rituel-texte" title="Section Rituel — Texte" subtitle="Titre et description de la section histoire de marque">
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Titre</label>
-            <input className={inputCls()} value={rituelTitle} onChange={e => setRituelTitle(e.target.value)} placeholder="Le Rituel de la Fée" />
+            <input className={inputCls()} value={rituelTitle} onChange={e => setRituelTitle(e.target.value)} placeholder="Le Rituel de la|Fée" />
+            <Hint>Utilisez <code className="rounded bg-[#E5D5C5] px-1">|</code> pour mettre la dernière partie en couleur brun (ex : <code className="rounded bg-[#E5D5C5] px-1">Le Rituel de la|Fée</code>)</Hint>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Description</label>
-            <textarea className={inputCls()} rows={3} value={rituelDesc} onChange={e => setRituelDesc(e.target.value)} placeholder="Fondée sur les secrets ancestraux…" />
+            <textarea className={inputCls()} rows={4} value={rituelDesc} onChange={e => setRituelDesc(e.target.value)} placeholder="Fondée sur les secrets ancestraux…" />
           </div>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ rituel_title: rituelTitle, rituel_description: rituelDesc })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("rituel-texte")} onClick={() => save("rituel-texte", { rituel_title: rituelTitle, rituel_description: rituelDesc })} />
         </div>
-      </SectionCard>
+      </Section>
 
       {/* ── 5. Engagements ──────────────────────────────────── */}
-      <SectionCard title="Nos Engagements (3 cards)" subtitle="Titre et description de chaque engagement marque">
+      <Section id="engagements" title="Nos Engagements" subtitle="3 cartes d'engagement affichées en bas de la page d'accueil">
         <div className="space-y-4">
           {parseEngagements().map((item, i) => (
             <div key={i} className="rounded border border-[#E5D5C5] bg-[#FAF6F1] p-3 space-y-2">
@@ -380,79 +434,103 @@ export default function SiteSettingsPage() {
                 <span className="text-xs font-semibold text-[#6B5744]">Engagement {i + 1}</span>
                 <button type="button" onClick={() => removeEngagement(i)} className="text-xs text-red-400 hover:text-red-600">Supprimer</button>
               </div>
-              <input className={inputCls()} placeholder="Titre (ex: Formules Clean)" value={item.title} onChange={e => updateEngagement(i, "title", e.target.value)} />
-              <textarea className={inputCls()} rows={2} placeholder="Description" value={item.description} onChange={e => updateEngagement(i, "description", e.target.value)} />
+              <input className={inputCls()} placeholder="Titre (ex : Formules Clean)" value={item.title} onChange={e => updateEngagement(i, "title", e.target.value)} />
+              <textarea className={inputCls()} rows={2} placeholder="Description courte" value={item.description} onChange={e => updateEngagement(i, "description", e.target.value)} />
             </div>
           ))}
           <button type="button" onClick={addEngagement} className="text-xs text-[#C9A84C] hover:underline">+ Ajouter un engagement</button>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ engagements })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("engagements")} onClick={() => save("engagements", { engagements })} />
         </div>
-      </SectionCard>
+      </Section>
 
       {/* ── 6. Témoignages ─────────────────────────────────── */}
-      <SectionCard title="Témoignages clients" subtitle="4 avis affichés sur la page d'accueil">
+      <Section id="temoignages" title="Témoignages clients" subtitle="Avis affichés sur la page d'accueil">
         <div className="space-y-4">
           {parseTestimonials().map((item, i) => (
             <div key={i} className="rounded border border-[#E5D5C5] bg-[#FAF6F1] p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#6B5744]">Avis {i + 1}</span>
+                <span className="text-xs font-semibold text-[#6B5744]">Avis {i + 1} — {item.name || "Sans nom"}</span>
                 <button type="button" onClick={() => removeTestimonial(i)} className="text-xs text-red-400 hover:text-red-600">Supprimer</button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <input className={inputCls()} placeholder="Nom (ex: Aminata K.)" value={item.name} onChange={e => updateTestimonial(i, "name", e.target.value)} />
-                <input className={inputCls()} placeholder="Initiales (AK)" value={item.initials} onChange={e => updateTestimonial(i, "initials", e.target.value)} />
-                <input className={inputCls()} placeholder="Quartier (ex: Cocody)" value={item.location} onChange={e => updateTestimonial(i, "location", e.target.value)} />
-                <input className={inputCls()} placeholder="Produit (ex: Crème Éclat)" value={item.product} onChange={e => updateTestimonial(i, "product", e.target.value)} />
-                <input className={inputCls()} placeholder="Date (ex: Juin 2026)" value={item.date} onChange={e => updateTestimonial(i, "date", e.target.value)} />
-                <input type="number" min={1} max={5} className={inputCls()} placeholder="Note /5" value={item.rating} onChange={e => updateTestimonial(i, "rating", Number(e.target.value))} />
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Nom</label>
+                  <input className={inputCls()} placeholder="Aminata K." value={item.name} onChange={e => updateTestimonial(i, "name", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Initiales</label>
+                  <input className={inputCls()} placeholder="AK" value={item.initials} onChange={e => updateTestimonial(i, "initials", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Ville / Quartier</label>
+                  <input className={inputCls()} placeholder="Cocody, Abidjan" value={item.location} onChange={e => updateTestimonial(i, "location", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Produit concerné</label>
+                  <input className={inputCls()} placeholder="Crème Éclat Botanique" value={item.product} onChange={e => updateTestimonial(i, "product", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Date</label>
+                  <input className={inputCls()} placeholder="Juin 2026" value={item.date} onChange={e => updateTestimonial(i, "date", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[11px] text-[#6B5744]">Note (1–5)</label>
+                  <input type="number" min={1} max={5} className={inputCls()} value={item.rating} onChange={e => updateTestimonial(i, "rating", Number(e.target.value))} />
+                </div>
               </div>
-              <textarea className={inputCls()} rows={3} placeholder="Texte du témoignage" value={item.text} onChange={e => updateTestimonial(i, "text", e.target.value)} />
+              <div>
+                <label className="mb-0.5 block text-[11px] text-[#6B5744]">Texte du témoignage</label>
+                <textarea className={inputCls()} rows={3} placeholder="Texte du témoignage…" value={item.text} onChange={e => updateTestimonial(i, "text", e.target.value)} />
+              </div>
             </div>
           ))}
           <button type="button" onClick={addTestimonial} className="text-xs text-[#C9A84C] hover:underline">+ Ajouter un témoignage</button>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ testimonials })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("temoignages")} onClick={() => save("temoignages", { testimonials })} />
         </div>
-      </SectionCard>
+      </Section>
 
       {/* ── 7. Réseaux sociaux ──────────────────────────────── */}
-      <SectionCard title="Réseaux sociaux" subtitle="Liens affichés dans le footer">
+      <Section id="sociaux" title="Réseaux sociaux" subtitle="Liens affichés dans le footer (Instagram, TikTok, WhatsApp…)">
         <div className="space-y-3">
           {parseSocials().map((item, i) => (
             <div key={i} className="flex min-w-0 items-center gap-2">
-              <input className={inputCls("w-28 shrink-0")} placeholder="Label (Instagram)" value={item.label} onChange={e => updateSocial(i, "label", e.target.value)} />
-              <input className={inputCls("min-w-0 flex-1")} placeholder="URL complète" value={item.href} onChange={e => updateSocial(i, "href", e.target.value)} />
-              <button type="button" onClick={() => removeSocial(i)} className="text-xs text-red-400 hover:text-red-600 shrink-0">✕</button>
+              <div className="w-28 shrink-0">
+                {i === 0 && <label className="mb-0.5 block text-[11px] text-[#6B5744]">Réseau</label>}
+                <input className={inputCls()} placeholder="Instagram" value={item.label} onChange={e => updateSocial(i, "label", e.target.value)} />
+              </div>
+              <div className="min-w-0 flex-1">
+                {i === 0 && <label className="mb-0.5 block text-[11px] text-[#6B5744]">URL complète</label>}
+                <input className={inputCls("min-w-0")} placeholder="https://instagram.com/…" value={item.href} onChange={e => updateSocial(i, "href", e.target.value)} />
+              </div>
+              <button type="button" onClick={() => removeSocial(i)} className={`shrink-0 text-xs text-red-400 hover:text-red-600 ${i === 0 ? "mt-4" : ""}`}>✕</button>
             </div>
           ))}
           <button type="button" onClick={addSocial} className="text-xs text-[#C9A84C] hover:underline">+ Ajouter un réseau</button>
+          <Hint>Labels reconnus pour l&apos;icône automatique : Instagram, TikTok, WhatsApp</Hint>
         </div>
         <div className="mt-4">
-          <button type="button" onClick={() => save({ social_links: socials })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+          <SaveBtn status={status("sociaux")} onClick={() => save("sociaux", { social_links: socials })} />
         </div>
-      </SectionCard>
+      </Section>
 
       {/* ── 8. Newsletter ────────────────────────────────────── */}
-      <SectionCard title="Section Newsletter" subtitle="Texte descriptif affiché à côté du formulaire">
-        <textarea className={inputCls()} rows={2} value={newsletterDesc} onChange={e => setNewsletterDesc(e.target.value)} placeholder="Rituels inédits, offres privées et avant-premières réservées aux membres." />
-        <div className="mt-4">
-          <button type="button" onClick={() => save({ newsletter_description: newsletterDesc })}
-            className="rounded bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#1A0A00] hover:bg-[#b8932a] disabled:opacity-50"
-            disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>
+      <Section id="newsletter" title="Section Newsletter" subtitle="Texte affiché à côté du formulaire d'inscription">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-[#1A0A00]">Description</label>
+          <textarea className={inputCls()} rows={2} value={newsletterDesc} onChange={e => setNewsletterDesc(e.target.value)} placeholder="Rituels inédits, offres privées et avant-premières réservées aux membres." />
         </div>
-      </SectionCard>
+        <div className="mt-4">
+          <SaveBtn status={status("newsletter")} onClick={() => save("newsletter", { newsletter_description: newsletterDesc })} />
+        </div>
+      </Section>
 
-      {/* ── 9. Rituel média ─────────────────────────────────── */}
+      {/* ── 9. Rituel — Média ───────────────────────────────── */}
       <RituelMediaSection />
+
     </div>
   )
 }
