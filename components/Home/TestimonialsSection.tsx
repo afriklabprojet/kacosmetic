@@ -1,47 +1,15 @@
 import { Star } from "lucide-react"
 
-const REVIEWS = [
-  {
-    id: 1,
-    name: "Aminata K.",
-    location: "Cocody, Abidjan",
-    rating: 5,
-    text: "La crème éclat a totalement transformé mon teint en 2 semaines. Mon visage est lumineux comme jamais. Je recommande à toutes mes amies !",
-    product: "Crème Éclat Botanique",
-    date: "Juin 2026",
-    initials: "AK",
-  },
-  {
-    id: 2,
-    name: "Fatou D.",
-    location: "Plateau, Abidjan",
-    rating: 5,
-    text: "J'utilise Ka Cosmetic depuis 6 mois. La livraison est toujours rapide, les produits sont authentiques et l'emballage est luxueux. Je suis une cliente fidèle.",
-    product: "Sérum Vitamine C",
-    date: "Mai 2026",
-    initials: "FD",
-  },
-  {
-    id: 3,
-    name: "Mariame T.",
-    location: "Yopougon, Abidjan",
-    rating: 5,
-    text: "Enfin des produits pensés pour nos peaux noires ! Résultats visibles dès la première semaine. Le service client est exceptionnel.",
-    product: "Huile Corps Karité",
-    date: "Juin 2026",
-    initials: "MT",
-  },
-  {
-    id: 4,
-    name: "Kadiatou B.",
-    location: "Marcory, Abidjan",
-    rating: 5,
-    text: "Le coffret cadeau que j'ai offert à ma mère était magnifiquement emballé. Elle a adoré chaque produit. Ka Cosmetic c'est du luxe accessible !",
-    product: "Coffret Prestige",
-    date: "Mai 2026",
-    initials: "KB",
-  },
-]
+interface Review {
+  id: number
+  name: string
+  location: string
+  rating: number
+  text: string
+  product: string
+  date: string
+  initials: string
+}
 
 function StarRating({ rating }: Readonly<{ rating: number }>) {
   return (
@@ -57,7 +25,7 @@ function StarRating({ rating }: Readonly<{ rating: number }>) {
   )
 }
 
-function ReviewCard({ review }: Readonly<{ review: typeof REVIEWS[number] }>) {
+function ReviewCard({ review }: Readonly<{ review: Review }>) {
   return (
     <article className="flex w-[80vw] flex-shrink-0 snap-center flex-col gap-4 rounded-2xl border border-or/10 bg-white p-6 shadow-sm sm:w-[60vw] md:w-auto md:flex-shrink">
       <div className="flex items-start justify-between">
@@ -86,12 +54,11 @@ function ReviewCard({ review }: Readonly<{ review: typeof REVIEWS[number] }>) {
   )
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ reviews }: Readonly<{ reviews: Review[] }>) {
   return (
     <section className="fade-in-section bg-ivoire py-20 md:px-8 md:py-24">
       <div className="mx-auto max-w-[1400px]">
 
-        {/* En-tête */}
         <div className="mb-12 flex flex-col items-start justify-between gap-4 px-4 md:flex-row md:items-end md:px-0">
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.28em] text-or">
@@ -113,16 +80,14 @@ export default function TestimonialsSection() {
           </div>
         </div>
 
-        {/* Mobile : carousel horizontal / Desktop : grille */}
         <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 pb-4 no-scrollbar md:grid md:grid-cols-4 md:overflow-visible md:px-0 md:pb-0">
-          {REVIEWS.map((review) => (
+          {reviews.map((review) => (
             <ReviewCard key={review.id} review={review} />
           ))}
         </div>
 
-        {/* Indicateur de pagination mobile */}
         <div className="mt-4 flex justify-center gap-1.5 md:hidden" aria-hidden="true">
-          {REVIEWS.map((_, i) => (
+          {reviews.map((_, i) => (
             <span key={i} className={`block h-1 rounded-full bg-or/30 ${i === 0 ? "w-4 bg-or" : "w-1.5"}`} />
           ))}
         </div>
