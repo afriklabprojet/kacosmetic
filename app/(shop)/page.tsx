@@ -37,22 +37,6 @@ const CATEGORIES = [
     index: "02",
     colSpan: "md:col-span-1 md:row-span-1",
   },
-  {
-    name: "Maquillage",
-    slug: "maquillage",
-    image: "https://images.unsplash.com/photo-1596704017254-9b121068fb31?q=80&w=800&auto=format&fit=crop",
-    label: "Couleur & Lumière",
-    index: "03",
-    colSpan: "md:col-span-1 md:row-span-1",
-  },
-  {
-    name: "Parfums",
-    slug: "parfums",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683702?q=80&w=800&auto=format&fit=crop",
-    label: "Signatures Olfactives",
-    index: "04",
-    colSpan: "md:col-span-1 md:row-span-1",
-  },
 ]
 
 // F — Engagements de marque
@@ -318,7 +302,7 @@ export default async function HomePage() {
           </div>
 
           {/* Desktop bento / mobile scroll horizontal */}
-          <div className="flex h-[60vh] overflow-x-auto snap-x snap-mandatory gap-4 pb-4 no-scrollbar md:grid md:grid-cols-4 md:grid-rows-2 md:h-[620px] md:overflow-visible md:pb-0">
+          <div className="flex h-[60vh] overflow-x-auto snap-x snap-mandatory gap-4 pb-4 no-scrollbar md:grid md:grid-cols-3 md:grid-rows-2 md:h-[620px] md:overflow-visible md:pb-0">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.slug}
@@ -364,7 +348,7 @@ export default async function HomePage() {
                 <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
               </svg>
               <h3 className="font-display text-lg text-ebene">Coffrets<br />Exclusifs</h3>
-              <span className="mt-3 text-[10px] uppercase tracking-[0.2em] text-or">05</span>
+              <span className="mt-3 text-[10px] uppercase tracking-[0.2em] text-or">03</span>
             </Link>
           </div>
         </div>
