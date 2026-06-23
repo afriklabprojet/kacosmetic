@@ -19,7 +19,6 @@ export interface NavCategory {
   featured: { label: string; name: string; price: string }
 }
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1556228578-8d89b6acb68a?q=80&w=800&auto=format&fit=crop"
 
 export default function HeaderClient({ navItems }: Readonly<{ navItems: NavCategory[] }>) {
   const { data: session } = useSession()
@@ -177,8 +176,8 @@ export default function HeaderClient({ navItems }: Readonly<{ navItems: NavCateg
               <div className="mx-auto max-w-[1400px] grid grid-cols-12 gap-0 px-6 py-10 lg:px-8">
                 <div className="col-span-3 pr-8">
                   <div className="relative h-64 overflow-hidden rounded-2xl">
-                    {isOpen && (
-                      <Image src={item.image || FALLBACK_IMAGE} alt={item.label} fill sizes="300px" className="object-cover transition-transform duration-700 hover:scale-105" />
+                    {isOpen && item.image && (
+                      <Image src={item.image} alt={item.label} fill sizes="300px" className="object-cover transition-transform duration-700 hover:scale-105" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ebene/60 to-transparent" />
                     <div className="absolute bottom-4 left-4"><span className="font-display text-xl text-white">{item.label}</span></div>
