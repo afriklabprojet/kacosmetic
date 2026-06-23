@@ -150,7 +150,7 @@ async function getRelatedProducts(categoryId: string, excludeSlug: string, limit
       },
       variants: {
         where: { isActive: true },
-        select: { price: true, comparePrice: true, stock: true, reservedStock: true },
+        select: { id: true, price: true, comparePrice: true, stock: true, reservedStock: true },
         orderBy: { price: "asc" },
         take: 1,
       },
