@@ -220,6 +220,7 @@ export default async function ProductPage({ params }: Readonly<Props>) {
                     blurDataUrl={img?.blurHash}
                     isFeatured={p.isFeatured}
                     inStock={(v?.stock ?? 0) - (v?.reservedStock ?? 0) > 0}
+                    variantId={v?.id}
                   />
                 )
               })}
